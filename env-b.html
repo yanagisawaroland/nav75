@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+	<head>
+		<meta charset="UTF-8">
+		<meta name="viewport" content="width=device-width,initial-scale=1.0">
+		<title>B环境 devops51</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#f0f2f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;padding:20px 16px;color:#1a1a2e}
+.header{text-align:center;margin-bottom:28px}
+.header h1{font-size:1.7em;color:#1a1a2e;margin-bottom:4px}
+.header p{color:#888;font-size:0.8em}
+.nav-tabs{display:flex;justify-content:center;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+.nav-tabs a{padding:8px 20px;border-radius:20px;text-decoration:none;font-size:0.82em;font-weight:600;border:1px solid #e0e0e0;background:#fff;color:#555;transition:all 0.2s}
+.nav-tabs a:hover,.nav-tabs a.active{background:#1a1a2e;color:#fff;border-color:#1a1a2e}
+.section{max-width:1100px;margin:0 auto 22px}
+.section-title{font-size:0.7em;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#999;margin-bottom:10px;padding-left:4px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.card{background:#fff;border:1px solid #e8e8e8;border-radius:12px;padding:13px 15px;text-decoration:none;color:#1a1a2e;transition:all 0.2s;display:flex;align-items:flex-start;gap:10px;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
+.card:hover{box-shadow:0 4px 14px rgba(0,0,0,0.1);transform:translateY(-2px);border-color:#d0d0d0}
+.card.pending{opacity:0.5;cursor:default}
+.card.pending:hover{transform:none;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
+.icon{font-size:1.3em;width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:8px;flex-shrink:0}
+.info{flex:1;min-width:0}
+.name{font-size:0.86em;font-weight:700;margin-bottom:2px}
+.url{font-size:0.66em;color:#3b82f6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.url2{font-size:0.63em;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.tag{font-size:0.62em;color:#888;margin-top:2px}
+.pending-badge{font-size:0.6em;background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:8px;margin-top:2px;display:inline-block}
+.bg-blue{background:#dbeafe}.bg-orange{background:#ffedd5}.bg-purple{background:#ede9fe}
+.bg-green{background:#dcfce7}.bg-red{background:#fee2e2}.bg-yellow{background:#fef9c3}
+.bg-cyan{background:#cffafe}.bg-teal{background:#ccfbf1}.bg-indigo{background:#e0e7ff}
+.bg-pink{background:#fce7f3}.bg-gray{background:#f3f4f6}
+footer{text-align:center;color:#ccc;font-size:0.7em;margin-top:16px}
+</style>
+	</head>
+	<body>
+		<div class="header">
+			  <h1>🚀 DevOps 统一导航</h1>
+			    <p>k3s v1.34.6 · Istio v1.24.3 · MetalLB VIP 10.20.50.50</p>
+		</div>
+		<div class="nav-tabs">
+			  <a href="index.html">🌐 主页</a>
+			    <a href="env-a.html">🅰️ A环境</a>
+			      <a href="env-b.html" class="active">🅱️ B环境</a>
+			        <a href="env-c.html">©️ C环境</a>
+		</div>
+		<div class="section">
+			  <div class="section-title">☸️ 基础平台</div>
+			    <div class="grid">
+				        <a class="card" href="#" onclick="return false">
+						      <div class="icon bg-purple">🐙</div>
+						            <div class="info"><div class="name">ArgoCD</div><div class="url">argocd.devops51.lan</div><div class="pending-badge">⏳ 待部署/配置域名</div></div>
+							        </a>
+								  </div>
+		</div>
+		<div class="section">
+			  <div class="section-title">📊 监控告警</div>
+			    <div class="grid">
+				        <a class="card" href="#" onclick="return false">
+						      <div class="icon bg-orange">📊</div>
+						            <div class="info"><div class="name">Grafana</div><div class="url">grafana.devops51.lan</div><div class="pending-badge">⏳ 待部署/配置域名</div></div>
+							        </a>
+								    <a class="card" href="http://prometheus.devops51.lan" target="_blank">
+									          <div class="icon bg-red">🔥</div>
+										        <div class="info"><div class="name">Prometheus</div><div class="url">http://prometheus.devops51.lan</div><div class="url2">10.20.50.51:32301</div></div>
+											    </a>
+											        <a class="card" href="#" onclick="return false">
+													      <div class="icon bg-yellow">🔔</div>
+													            <div class="info"><div class="name">AlertManager</div><div class="url">alertmanager.devops51.lan</div><div class="pending-badge">⏳ 待部署/配置域名</div></div>
+														        </a>
+															  </div>
+		</div>
+		<div class="section">
+			  <div class="section-title">📋 日志</div>
+			    <div class="grid">
+				        <a class="card" href="#" onclick="return false">
+						      <div class="icon bg-green">🔍</div>
+						            <div class="info"><div class="name">Kibana</div><div class="url">kibana.devops51.lan</div><div class="pending-badge">⏳ 待部署/配置域名</div></div>
+							        </a>
+								    <a class="card" href="#" onclick="return false">
+									          <div class="icon bg-cyan">🔎</div>
+										        <div class="info"><div class="name">Elasticsearch</div><div class="url">elasticsearch.devops51.lan</div><div class="pending-badge">⏳ 待部署/配置域名</div></div>
+											    </a>
+											        <a class="card" href="#" onclick="return false">
+													      <div class="icon bg-indigo">🔭</div>
+													            <div class="info"><div class="name">Jaeger</div><div class="url">jaeger.devops51.lan</div><div class="pending-badge">⏳ 待部署/配置域名</div></div>
+														        </a>
+															  </div>
+		</div>
+		<div class="section">
+			  <div class="section-title">🕸️ 服务网格 Istio v1.24.3</div>
+			    <div class="grid">
+				        <a class="card" href="http://kiali.devops51.lan" target="_blank">
+						      <div class="icon bg-blue">🕸️</div>
+						            <div class="info"><div class="name">Kiali</div><div class="url">http://kiali.devops51.lan</div><div class="url2">10.20.50.51:32020</div><div class="tag">admin / admin</div></div>
+							        </a>
+								    <a class="card" href="http://10.20.50.50" target="_blank">
+									          <div class="icon bg-teal">🌐</div>
+										        <div class="info"><div class="name">Istio Ingress HTTP</div><div class="url">http://10.20.50.50</div><div class="tag">VIP · 无需端口</div></div>
+											    </a>
+											      </div>
+		</div>
+		<div class="section">
+			  <div class="section-title">☕ 应用</div>
+			    <div class="grid">
+				        <a class="card" href="http://nginx.devops51.lan" target="_blank">
+						      <div class="icon bg-green">🌿</div>
+						            <div class="info"><div class="name">nginx 测试应用</div><div class="url">http://nginx.devops51.lan</div><div class="tag">金丝雀测试</div></div>
+							        </a>
+								    <a class="card" href="#" onclick="return false">
+									          <div class="icon bg-green">☕</div>
+										        <div class="info"><div class="name">tomcat5 staging</div><div class="url">tomcat5-staging.devops51.lan</div><div class="pending-badge">⏳ 待部署/配置域名</div></div>
+											    </a>
+											        <a class="card" href="#" onclick="return false">
+													      <div class="icon bg-blue">☕</div>
+													            <div class="info"><div class="name">tomcat5 production</div><div class="url">tomcat5-production.devops51.lan</div><div class="pending-badge">⏳ 待部署/配置域名</div></div>
+														        </a>
+															  </div>
+		</div>
+		<div class="section">
+			  <div class="section-title">🖥️ 节点信息</div>
+			    <div class="grid">
+				        <a class="card" href="http://10.20.50.51" target="_blank">
+						      <div class="icon bg-gray">🖥️</div>
+						            <div class="info"><div class="name">master51</div><div class="url">http://10.20.50.51</div><div class="tag">root / remanco · k3s Master</div></div>
+							        </a>
+								    <a class="card" href="http://10.20.50.52" target="_blank">
+									          <div class="icon bg-gray">🖥️</div>
+										        <div class="info"><div class="name">node52</div><div class="url">http://10.20.50.52</div><div class="tag">root / remanco · k3s Worker</div></div>
+											    </a>
+											      </div>
+		</div>
+		<footer>DevOps 统一导航 · node75 · 2026 · 持续更新中</footer>
+	</body>
+</html>
