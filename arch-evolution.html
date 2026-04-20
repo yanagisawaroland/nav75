@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>架构演进：单体 → 微服务 → 服务网格</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; color: #1e293b; padding: 20px; }
+h2 { text-align: center; color: #1e293b; font-size: 1.2em; margin-bottom: 4px; }
+.subtitle { text-align: center; color: #64748b; font-size: 0.78em; margin-bottom: 16px; }
+
+.tabs { display: flex; justify-content: center; gap: 0; margin-bottom: 20px; border-radius: 10px; overflow: hidden; border: 1px solid #e2e8f0; max-width: 600px; margin: 0 auto 20px; }
+.tab { flex: 1; padding: 10px 8px; text-align: center; cursor: pointer; font-size: 0.75em; font-weight: 600; background: #fff; color: #64748b; border-right: 1px solid #e2e8f0; transition: all 0.2s; }
+.tab:last-child { border-right: none; }
+.tab.active { background: #2563eb; color: #fff; }
+.tab:hover:not(.active) { background: #f1f5f9; }
+
+.stage { display: none; max-width: 1000px; margin: 0 auto; }
+.stage.active { display: block; }
+
+.stage-header { text-align: center; margin-bottom: 16px; }
+.stage-title { font-size: 1.1em; font-weight: 700; color: #1e293b; margin-bottom: 4px; }
+.stage-desc { font-size: 0.78em; color: #64748b; }
+
+.arch-canvas { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; margin-bottom: 16px; min-height: 280px; }
+
+/* 单体架构 */
+.monolith { display: flex; flex-direction: column; align-items: center; gap: 12px; }
+.client-box { background: #ede9fe; border: 2px solid #a78bfa; border-radius: 8px; padding: 8px 24px; font-size: 0.78em; font-weight: 600; color: #5b21b6; }
+.arrow { color: #94a3b8; font-size: 1.2em; text-align: center; }
+.mono-app { background: #fef3c7; border: 2px solid #f59e0b; border-radius: 12px; padding: 16px 24px; text-align: center; width: 320px; }
+.mono-app-title { font-size: 0.82em; font-weight: 700; color: #92400e; margin-bottom: 10px; }
+.mono-modules { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.mono-module { background: #fbbf24; border-radius: 6px; padding: 4px 10px; font-size: 0.68em; color: #78350f; font-weight: 600; }
+.db-box { background: #dcfce7; border: 2px solid #22c55e; border-radius: 8px; padding: 8px 24px; font-size: 0.78em; font-weight: 600; color: #15803d; }
+
+/* 微服务架构 */
+.microservice { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.gateway-box { background: #dbeafe; border: 2px solid #3b82f6; border-radius: 8px; padding: 8px 20px; font-size: 0.78em; font-weight: 600; color: #1d4ed8; }
+.services-grid { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.svc { border-radius: 10px; padding: 10px 12px; text-align: center; width: 130px; border: 2px solid; }
+.svc-title { font-size: 0.72em; font-weight: 700; margin-bottom: 4px; }
+.svc-port { font-size: 0.62em; opacity: 0.7; }
+.svc-blue { background: #eff6ff; border-color: #3b82f6; color: #1d4ed8; }
+.svc-green { background: #f0fdf4; border-color: #22c55e; color: #15803d; }
+.svc-orange { background: #fff7ed; border-color: #f97316; color: #c2410c; }
+.svc-purple { background: #faf5ff; border-color: #a855f7; color: #7e22ce; }
+.svc-pink { background: #fdf2f8; border-color: #ec4899; color: #be185d; }
+.dbs-row { display: flex; gap: 8px; }
+.db-small { background: #f0fdf4; border: 1px solid #86efac; border-radius: 6px; padding: 5px 10px; font-size: 0.65em; color: #15803d; font-weight: 600; }
+.problem-box { background: #fef2f2; border: 1px solid #fca5a5; border-radius: 8px; padding: 10px 14px; font-size: 0.72em; color: #dc2626; margin-top: 4px; }
+.problem-title { font-weight: 700; margin-bottom: 4px; }
+
+/* 服务网格 */
+.mesh { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.vip-box { background: #ecfdf5; border: 2px solid #10b981; border-radius: 8px; padding: 8px 20px; font-size: 0.78em; font-weight: 600; color: #065f46; }
+.istiod-box { background: #fef3c7; border: 2px dashed #f59e0b; border-radius: 10px; padding: 8px 20px; font-size: 0.75em; font-weight: 600; color: #92400e; }
+.mesh-services { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+.mesh-svc { border-radius: 10px; padding: 8px 10px; text-align: center; width: 130px; border: 2px solid; position: relative; }
+.sidecar { position: absolute; top: -8px; right: -8px; background: #f59e0b; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; font-size: 0.55em; color: #fff; font-weight: 700; border: 2px solid #fff; }
+.mesh-features { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 4px; }
+.feature { background: #eff6ff; border: 1px solid #bfdbfe; border-radius: 16px; padding: 3px 10px; font-size: 0.65em; color: #1d4ed8; font-weight: 600; }
+.feature.green { background: #f0fdf4; border-color: #bbf7d0; color: #15803d; }
+.feature.purple { background: #faf5ff; border-color: #e9d5ff; color: #7e22ce; }
+.feature.orange { background: #fff7ed; border-color: #fed7aa; color: #c2410c; }
+
+/* 对比表 */
+.compare { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0; border: 1px solid #e2e8f0; border-radius: 10px; overflow: hidden; margin-bottom: 16px; }
+.compare-cell { padding: 8px 10px; font-size: 0.72em; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0; }
+.compare-cell:last-child, .compare-cell:nth-child(4n) { border-right: none; }
+.compare-cell.header { background: #1e293b; color: #fff; font-weight: 700; font-size: 0.72em; }
+.compare-cell.ok { color: #15803d; }
+.compare-cell.bad { color: #dc2626; }
+.compare-cell.mid { color: #d97706; }
+
+.nav-btns { display: flex; gap: 8px; justify-content: center; margin-top: 4px; }
+.btn { padding: 8px 24px; border-radius: 8px; border: none; cursor: pointer; font-size: 0.78em; font-weight: 600; transition: all 0.2s; }
+.btn-primary { background: #2563eb; color: #fff; }
+.btn-primary:hover { background: #1d4ed8; }
+.btn-gray { background: #e2e8f0; color: #475569; }
+.btn-gray:hover { background: #cbd5e1; }
+.btn:disabled { opacity: 0.3; cursor: not-allowed; }
+</style>
+
+</head>
+<body>
+<h2>🏗️ 架构演进：单体 → 微服务 → 服务网格</h2>
+<p class="subtitle">点击标签页查看各阶段架构，了解为什么需要 Istio</p>
+
+<div class="tabs">
+  <div class="tab active" onclick="showStage(0)">① 单体架构</div>
+  <div class="tab" onclick="showStage(1)">② 微服务架构</div>
+  <div class="tab" onclick="showStage(2)">③ 服务网格</div>
+  <div class="tab" onclick="showStage(3)">④ 对比总结</div>
+</div>
+
+<!-- 单体架构 -->
+
+<div class="stage active" id="stage0">
+  <div class="stage-header">
+    <div class="stage-title">📦 单体架构（Monolith）</div>
+    <div class="stage-desc">所有功能打包在一个应用里，部署简单，但扩展困难</div>
+  </div>
+  <div class="arch-canvas">
+    <div class="monolith">
+      <div class="client-box">👤 用户 / 浏览器</div>
+      <div class="arrow">↓ HTTP</div>
+      <div class="mono-app">
+        <div class="mono-app-title">🏪 电商应用（单一进程）</div>
+        <div class="mono-modules">
+          <div class="mono-module">用户模块</div>
+          <div class="mono-module">商品模块</div>
+          <div class="mono-module">订单模块</div>
+          <div class="mono-module">支付模块</div>
+          <div class="mono-module">购物车模块</div>
+          <div class="mono-module">通知模块</div>
+          <div class="mono-module">搜索模块</div>
+          <div class="mono-module">报表模块</div>
+        </div>
+      </div>
+      <div class="arrow">↓</div>
+      <div class="db-box">🗄️ 单一数据库（MySQL）</div>
+    </div>
+  </div>
+  <div class="compare" style="grid-template-columns:1fr 1fr;">
+    <div class="compare-cell header">✅ 优点</div>
+    <div class="compare-cell header">❌ 缺点</div>
+    <div class="compare-cell ok">开发简单，本地一键启动</div>
+    <div class="compare-cell bad">任何模块改动需要全量重新部署</div>
+    <div class="compare-cell ok">调试方便，日志集中</div>
+    <div class="compare-cell bad">一个模块出Bug，整个应用崩溃</div>
+    <div class="compare-cell ok">事务处理简单</div>
+    <div class="compare-cell bad">技术栈固定，无法局部升级</div>
+    <div class="compare-cell ok">适合小团队、早期项目</div>
+    <div class="compare-cell bad">无法针对热点模块单独扩容</div>
+  </div>
+  <div class="nav-btns">
+    <button class="btn btn-gray" disabled>← 上一阶段</button>
+    <button class="btn btn-primary" onclick="showStage(1)">下一阶段：微服务 →</button>
+  </div>
+</div>
+
+<!-- 微服务架构 -->
+
+<div class="stage" id="stage1">
+  <div class="stage-header">
+    <div class="stage-title">🔧 微服务架构（Microservices）</div>
+    <div class="stage-desc">拆分为独立服务，灵活扩展，但服务间通信管理复杂</div>
+  </div>
+  <div class="arch-canvas">
+    <div class="microservice">
+      <div class="client-box">👤 用户 / 浏览器</div>
+      <div class="arrow">↓</div>
+      <div class="gateway-box">🌐 API Gateway（Nginx/Kong）</div>
+      <div class="arrow">↓ 按路由分发</div>
+      <div class="services-grid">
+        <div class="svc svc-blue"><div class="svc-title">👤 用户服务</div><div class="svc-port">:8001</div></div>
+        <div class="svc svc-green"><div class="svc-title">📦 商品服务</div><div class="svc-port">:8002</div></div>
+        <div class="svc svc-orange"><div class="svc-title">🛒 订单服务</div><div class="svc-port">:8003</div></div>
+        <div class="svc svc-purple"><div class="svc-title">💳 支付服务</div><div class="svc-port">:8004</div></div>
+        <div class="svc svc-pink"><div class="svc-title">🔔 通知服务</div><div class="svc-port">:8005</div></div>
+      </div>
+      <div class="dbs-row">
+        <div class="db-small">🗄️ 用户DB</div>
+        <div class="db-small">🗄️ 商品DB</div>
+        <div class="db-small">🗄️ 订单DB</div>
+        <div class="db-small">🗄️ 支付DB</div>
+      </div>
+      <div class="problem-box">
+        <div class="problem-title">⚠️ 新问题：服务多了，怎么管理？</div>
+        服务间调用如何加密？超时重试谁来处理？流量怎么控制？故障如何追踪？
+        → 每个服务都要写相同的代码！
+      </div>
+    </div>
+  </div>
+  <div class="nav-btns">
+    <button class="btn btn-gray" onclick="showStage(0)">← 单体架构</button>
+    <button class="btn btn-primary" onclick="showStage(2)">下一阶段：服务网格 →</button>
+  </div>
+</div>
+
+<!-- 服务网格 -->
+
+<div class="stage" id="stage2">
+  <div class="stage-header">
+    <div class="stage-title">🕸️ 服务网格（Service Mesh / Istio）</div>
+    <div class="stage-desc">Sidecar 代理接管所有服务间通信，应用代码无需关心网络问题</div>
+  </div>
+  <div class="arch-canvas">
+    <div class="mesh">
+      <div class="client-box">👤 用户 / 浏览器</div>
+      <div class="arrow">↓</div>
+      <div class="vip-box">🌐 Istio IngressGateway（VIP 10.20.50.50）</div>
+      <div class="istiod-box">⚙️ istiod（控制面）— 下发路由规则 / 证书 / 策略</div>
+      <div class="arrow">↓ 所有流量经过 Envoy Sidecar</div>
+      <div class="mesh-services">
+        <div class="mesh-svc svc-blue"><div class="sidecar">E</div><div class="svc-title">👤 用户服务</div><div class="svc-port">Envoy代理</div></div>
+        <div class="mesh-svc svc-green"><div class="sidecar">E</div><div class="svc-title">📦 商品服务</div><div class="svc-port">Envoy代理</div></div>
+        <div class="mesh-svc svc-orange"><div class="sidecar">E</div><div class="svc-title">🛒 订单服务</div><div class="svc-port">Envoy代理</div></div>
+        <div class="mesh-svc svc-purple"><div class="sidecar">E</div><div class="svc-title">💳 支付服务</div><div class="svc-port">Envoy代理</div></div>
+        <div class="mesh-svc svc-pink"><div class="sidecar">E</div><div class="svc-title">🔔 通知服务</div><div class="svc-port">Envoy代理</div></div>
+      </div>
+      <div class="mesh-features">
+        <div class="feature">🔒 mTLS 自动加密</div>
+        <div class="feature">⚖️ 精确流量控制</div>
+        <div class="feature green">🔄 自动重试</div>
+        <div class="feature green">⏱️ 超时管理</div>
+        <div class="feature purple">🔭 全链路追踪</div>
+        <div class="feature purple">📊 指标收集</div>
+        <div class="feature orange">⚡ 熔断限流</div>
+        <div class="feature orange">🧪 故障注入</div>
+      </div>
+    </div>
+  </div>
+  <div class="nav-btns">
+    <button class="btn btn-gray" onclick="showStage(1)">← 微服务架构</button>
+    <button class="btn btn-primary" onclick="showStage(3)">查看对比总结 →</button>
+  </div>
+</div>
+
+<!-- 对比总结 -->
+
+<div class="stage" id="stage3">
+  <div class="stage-header">
+    <div class="stage-title">📊 三阶段对比总结</div>
+    <div class="stage-desc">各阶段能力对比，理解为什么需要服务网格</div>
+  </div>
+  <div class="compare">
+    <div class="compare-cell header">能力</div>
+    <div class="compare-cell header">单体</div>
+    <div class="compare-cell header">微服务</div>
+    <div class="compare-cell header">服务网格</div>
+    <div class="compare-cell">独立部署</div>
+    <div class="compare-cell bad">❌ 全量部署</div>
+    <div class="compare-cell ok">✅ 独立部署</div>
+    <div class="compare-cell ok">✅ 独立部署</div>
+    <div class="compare-cell">弹性扩容</div>
+    <div class="compare-cell bad">❌ 整体扩容</div>
+    <div class="compare-cell ok">✅ 按服务扩容</div>
+    <div class="compare-cell ok">✅ 按服务扩容</div>
+    <div class="compare-cell">服务间加密</div>
+    <div class="compare-cell bad">❌ 明文</div>
+    <div class="compare-cell mid">⚠️ 需手动实现</div>
+    <div class="compare-cell ok">✅ mTLS自动</div>
+    <div class="compare-cell">流量控制</div>
+    <div class="compare-cell bad">❌ 无</div>
+    <div class="compare-cell mid">⚠️ 粗粒度</div>
+    <div class="compare-cell ok">✅ 精确权重</div>
+    <div class="compare-cell">熔断限流</div>
+    <div class="compare-cell bad">❌ 无</div>
+    <div class="compare-cell mid">⚠️ 代码实现</div>
+    <div class="compare-cell ok">✅ 配置实现</div>
+    <div class="compare-cell">链路追踪</div>
+    <div class="compare-cell bad">❌ 无</div>
+    <div class="compare-cell mid">⚠️ 需集成SDK</div>
+    <div class="compare-cell ok">✅ 自动采集</div>
+    <div class="compare-cell">金丝雀发布</div>
+    <div class="compare-cell bad">❌ 无</div>
+    <div class="compare-cell mid">⚠️ 依赖副本数</div>
+    <div class="compare-cell ok">✅ 精确1%粒度</div>
+    <div class="compare-cell">故障注入</div>
+    <div class="compare-cell bad">❌ 无</div>
+    <div class="compare-cell bad">❌ 无</div>
+    <div class="compare-cell ok">✅ 配置即可</div>
+    <div class="compare-cell">运维复杂度</div>
+    <div class="compare-cell ok">✅ 低</div>
+    <div class="compare-cell mid">⚠️ 中</div>
+    <div class="compare-cell mid">⚠️ 高（但收益大）</div>
+    <div class="compare-cell">适用规模</div>
+    <div class="compare-cell ok">小型项目</div>
+    <div class="compare-cell mid">中型项目</div>
+    <div class="compare-cell ok">大型/生产</div>
+  </div>
+  <div class="nav-btns">
+    <button class="btn btn-gray" onclick="showStage(2)">← 服务网格</button>
+    <button class="btn btn-primary" onclick="showStage(0)">↺ 从头看</button>
+  </div>
+</div>
+
+<script>
+function showStage(n) {
+  document.querySelectorAll('.stage').forEach((s,i) => s.classList.toggle('active', i===n));
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', i===n));
+}
+</script>
+
+</body>
+</html>
