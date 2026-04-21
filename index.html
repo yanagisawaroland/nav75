@@ -1,10 +1,10 @@
 <!DOCTYPE html>
 
 <html lang="zh-CN">
-	<head>
-		<meta charset="UTF-8">
-		<meta name="viewport" content="width=device-width,initial-scale=1.0">
-		<title>DevOps 统一导航</title>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>DevOps 统一导航</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#f0f2f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;padding:20px 16px;color:#1a1a2e}
@@ -33,75 +33,227 @@ body{background:#f0f2f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',
 .bg-cyan{background:#cffafe}.bg-teal{background:#ccfbf1}.bg-indigo{background:#e0e7ff}
 .bg-pink{background:#fce7f3}.bg-gray{background:#f3f4f6}
 footer{text-align:center;color:#ccc;font-size:0.7em;margin-top:16px}
+
+/* 自定义服务功能 */
+.add-btn-row{max-width:1100px;margin:0 auto 10px;display:flex;justify-content:flex-end}
+.add-btn{background:#2563eb;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:0.78em;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all 0.2s}
+.add-btn:hover{background:#1d4ed8}
+.custom-section-title{font-size:0.7em;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#2563eb;margin-bottom:10px;padding-left:4px;display:flex;align-items:center;gap:6px}
+.custom-badge{background:#dbeafe;color:#1d4ed8;border-radius:10px;padding:1px 8px;font-size:0.85em}
+.custom-card{position:relative}
+.card-del{position:absolute;top:6px;right:6px;background:#fee2e2;color:#dc2626;border:none;border-radius:4px;padding:1px 6px;font-size:0.6em;cursor:pointer;opacity:0;transition:opacity 0.2s}
+.custom-card:hover .card-del{opacity:1}
+
+/* 弹窗 */
+.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:1000;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:#fff;border-radius:14px;padding:24px;width:360px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,0.15)}
+.modal h3{font-size:0.95em;font-weight:700;color:#1a1a2e;margin-bottom:16px}
+.form-group{margin-bottom:12px}
+.form-group label{display:block;font-size:0.72em;font-weight:600;color:#374151;margin-bottom:4px}
+.form-group input,.form-group select{width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:7px 10px;font-size:0.78em;color:#1a1a2e;outline:none;transition:border 0.2s}
+.form-group input:focus,.form-group select:focus{border-color:#2563eb}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.modal-btn{padding:7px 18px;border-radius:8px;border:none;cursor:pointer;font-size:0.78em;font-weight:600}
+.modal-btn-primary{background:#2563eb;color:#fff}
+.modal-btn-primary:hover{background:#1d4ed8}
+.modal-btn-cancel{background:#f1f5f9;color:#475569}
+.modal-btn-cancel:hover{background:#e2e8f0}
 </style>
-	</head>
-	<body>
-		<div class="header">
-			  <h1>🚀 DevOps 统一导航</h1>
-			    <p>node75 · A/B/C 环境统一入口</p>
-		</div>
-		<div class="nav-tabs">
-			  <a href="index.html" class="active">🌐 主页</a>
-			    <a href="env-a.html">🅰️ A环境</a>
-			      <a href="env-b.html">🅱️ B环境</a>
-			        <a href="env-c.html">©️ C环境</a>
-		</div>
-		<div class="section">
-			  <div class="section-title">🌐 公共服务（node75 · 10.20.50.75）</div>
-			    <div class="grid">
-				        <a class="card" href="https://harbor.devops.local:7581" target="_blank">
-						      <div class="icon bg-blue">🐳</div>
-						            <div class="info"><div class="name">Harbor</div><div class="url">https://harbor.devops.local:7581</div><div class="tag">admin / Harbor12345</div></div>
-							        </a>
-								    <a class="card" href="http://gitlab.devops.local:7591" target="_blank">
-									          <div class="icon bg-orange">🦊</div>
-										        <div class="info"><div class="name">GitLab</div><div class="url">http://gitlab.devops.local:7591</div><div class="tag">root / huzhaofeng1234</div></div>
-											    </a>
-											        <a class="card" href="https://gitee.com/yanagisawa" target="_blank">
-													      <div class="icon bg-red">🍊</div>
-													            <div class="info"><div class="name">Gitee · yanagisawa</div><div class="url">https://gitee.com/yanagisawa</div><div class="tag">A环境仓库</div></div>
-														        </a>
-															    <a class="card" href="https://gitee.com/devops51" target="_blank">
-																          <div class="icon bg-red">🍊</div>
-																	        <div class="info"><div class="name">Gitee · devops51</div><div class="url">https://gitee.com/devops51</div><div class="tag">B环境仓库</div></div>
-																		    </a>
-																		        <a class="card" href="http://10.20.50.75:8888" target="_blank">
-																				      <div class="icon bg-gray">🗺️</div>
-																				            <div class="info"><div class="name">统一导航页</div><div class="url">http://10.20.50.75:8888</div><div class="tag">本页面</div></div>
-																					        </a>
-																						  </div>
-		</div>
-		<div class="section">
-			  <div class="section-title">🅰️ A环境 devops（点击进入详细页面）</div>
-			    <div class="grid">
-				        <a class="card" href="env-a.html" target="_blank">
-						      <div class="icon bg-indigo">🅰️</div>
-						            <div class="info"><div class="name">A环境服务列表</div><div class="url">env-a.html</div><div class="tag">K8s v1.27.1 · Istio v1.20.0 · master71(10.20.50.71-74)</div></div>
-							        </a>
-								    <a class="card" href="http://10.20.50.71:8888" target="_blank">
-									          <div class="icon bg-gray">🗺️</div>
-										        <div class="info"><div class="name">A环境导航页</div><div class="url">http://10.20.50.71:8888</div><div class="tag">原有导航页</div></div>
-											    </a>
-											      </div>
-		</div>
-		<div class="section">
-			  <div class="section-title">🅱️ B环境 devops51（点击进入详细页面）</div>
-			    <div class="grid">
-				        <a class="card" href="env-b.html" target="_blank">
-						      <div class="icon bg-teal">🅱️</div>
-						            <div class="info"><div class="name">B环境服务列表</div><div class="url">env-b.html</div><div class="tag">k3s v1.34.6 · Istio v1.24.3 · master51(10.20.50.51-52)</div></div>
-							        </a>
-								  </div>
-		</div>
-		<div class="section">
-			  <div class="section-title">©️ C环境 devops61（点击进入详细页面）</div>
-			    <div class="grid">
-				        <a class="card" href="env-c.html" target="_blank">
-						      <div class="icon bg-purple">©️</div>
-						            <div class="info"><div class="name">C环境服务列表</div><div class="url">env-c.html</div><div class="tag">master61(10.20.50.61)</div></div>
-							        </a>
-								  </div>
-		</div>
-		<footer>DevOps 统一导航 · node75 · 2026 · 持续更新中</footer>
-	</body>
+
+</head>
+<body>
+<div class="header">
+  <h1>🚀 DevOps 统一导航</h1>
+  <p>node75 · A/B/C 环境统一入口</p>
+</div>
+<div class="nav-tabs">
+  <a href="index.html" class="active">🌐 主页</a>
+  <a href="env-a.html">🅰️ A环境</a>
+  <a href="env-b.html">🅱️ B环境</a>
+  <a href="env-c.html">©️ C环境</a>
+</div>
+<div class="section">
+  <div class="section-title">🌐 公共服务（node75 · 10.20.50.75）</div>
+  <div class="grid">
+    <a class="card" href="https://harbor.devops.local:7581" target="_blank">
+      <div class="icon bg-blue">🐳</div>
+      <div class="info"><div class="name">Harbor</div><div class="url">https://harbor.devops.local:7581</div><div class="tag">admin / Harbor12345</div></div>
+    </a>
+    <a class="card" href="http://gitlab.devops.local:7591" target="_blank">
+      <div class="icon bg-orange">🦊</div>
+      <div class="info"><div class="name">GitLab</div><div class="url">http://gitlab.devops.local:7591</div><div class="tag">root / huzhaofeng1234</div></div>
+    </a>
+    <a class="card" href="https://gitee.com/yanagisawa" target="_blank">
+      <div class="icon bg-red">🍊</div>
+      <div class="info"><div class="name">Gitee · yanagisawa</div><div class="url">https://gitee.com/yanagisawa</div><div class="tag">A环境仓库</div></div>
+    </a>
+    <a class="card" href="https://gitee.com/devops51" target="_blank">
+      <div class="icon bg-red">🍊</div>
+      <div class="info"><div class="name">Gitee · devops51</div><div class="url">https://gitee.com/devops51</div><div class="tag">B环境仓库</div></div>
+    </a>
+    <a class="card" href="http://10.20.50.75:8888" target="_blank">
+      <div class="icon bg-gray">🗺️</div>
+      <div class="info"><div class="name">统一导航页</div><div class="url">http://10.20.50.75:8888</div><div class="tag">本页面</div></div>
+    </a>
+  </div>
+</div>
+<div class="section">
+  <div class="section-title">🅰️ A环境 devops（点击进入详细页面）</div>
+  <div class="grid">
+    <a class="card" href="env-a.html" target="_blank">
+      <div class="icon bg-indigo">🅰️</div>
+      <div class="info"><div class="name">A环境服务列表</div><div class="url">env-a.html</div><div class="tag">K8s v1.27.1 · Istio v1.20.0 · master71(10.20.50.71-74)</div></div>
+    </a>
+    <a class="card" href="http://10.20.50.71:8888" target="_blank">
+      <div class="icon bg-gray">🗺️</div>
+      <div class="info"><div class="name">A环境导航页</div><div class="url">http://10.20.50.71:8888</div><div class="tag">原有导航页</div></div>
+    </a>
+  </div>
+</div>
+<div class="section">
+  <div class="section-title">🅱️ B环境 devops51（点击进入详细页面）</div>
+  <div class="grid">
+    <a class="card" href="env-b.html" target="_blank">
+      <div class="icon bg-teal">🅱️</div>
+      <div class="info"><div class="name">B环境服务列表</div><div class="url">env-b.html</div><div class="tag">k3s v1.34.6 · Istio v1.24.3 · master51(10.20.50.51-52)</div></div>
+    </a>
+  </div>
+</div>
+<div class="section">
+  <div class="section-title">©️ C环境 devops61（点击进入详细页面）</div>
+  <div class="grid">
+    <a class="card" href="env-c.html" target="_blank">
+      <div class="icon bg-purple">©️</div>
+      <div class="info"><div class="name">C环境服务列表</div><div class="url">env-c.html</div><div class="tag">master61(10.20.50.61)</div></div>
+    </a>
+  </div>
+</div>
+
+<!-- 自定义服务区域 -->
+
+<div class="add-btn-row">
+  <button class="add-btn" onclick="openModal()">➕ 添加自定义服务</button>
+</div>
+<div class="section" id="customServices" style="display:none">
+  <div class="custom-section-title">⭐ 自定义服务 <span class="custom-badge">本地存储</span></div>
+  <div class="grid" id="customGrid"></div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3>➕ 添加自定义服务</h3>
+    <div class="form-group">
+      <label>服务名称 *</label>
+      <input type="text" id="svcName" placeholder="例如：Grafana">
+    </div>
+    <div class="form-group">
+      <label>访问地址 *</label>
+      <input type="text" id="svcUrl" placeholder="例如：http://grafana.devops51.lan">
+    </div>
+    <div class="form-group">
+      <label>备注说明</label>
+      <input type="text" id="svcTag" placeholder="例如：admin / admin">
+    </div>
+    <div class="form-group">
+      <label>图标</label>
+      <select id="svcIcon">
+        <option value="🔗">🔗 通用链接</option>
+        <option value="📊">📊 监控/图表</option>
+        <option value="🔥">🔥 Prometheus</option>
+        <option value="🕸️">🕸️ Istio/Kiali</option>
+        <option value="🐙">🐙 ArgoCD</option>
+        <option value="🐳">🐳 Harbor</option>
+        <option value="🌐">🌐 网关/入口</option>
+        <option value="☕">☕ Java应用</option>
+        <option value="🌿">🌿 测试应用</option>
+        <option value="🗄️">🗄️ 数据库</option>
+        <option value="📋">📋 日志</option>
+        <option value="🔔">🔔 告警</option>
+      </select>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn modal-btn-cancel" onclick="closeModal()">取消</button>
+      <button class="modal-btn modal-btn-primary" onclick="saveService()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const ENV_KEY = 'nav_custom_index';
+
+function getServices() {
+  try { return JSON.parse(localStorage.getItem(ENV_KEY) || '[]'); } catch(e) { return []; }
+}
+
+function saveServices(svcs) {
+  localStorage.setItem(ENV_KEY, JSON.stringify(svcs));
+}
+
+function renderCustomServices() {
+  const svcs = getServices();
+  const container = document.getElementById('customServices');
+  if (!container) return;
+  if (svcs.length === 0) {
+    container.style.display = 'none';
+    return;
+  }
+  container.style.display = 'block';
+  const grid = document.getElementById('customGrid');
+  grid.innerHTML = svcs.map((s, i) => `
+    <a class="card custom-card" href="${s.url}" target="_blank">
+      <button class="card-del" onclick="deleteService(${i});event.preventDefault()">✕</button>
+      <div class="icon bg-indigo">${s.icon}</div>
+      <div class="info">
+        <div class="name">${s.name}</div>
+        <div class="url">${s.url}</div>
+        ${s.tag ? `<div class="tag">${s.tag}</div>` : ''}
+      </div>
+    </a>
+  `).join('');
+}
+
+function deleteService(i) {
+  const svcs = getServices();
+  svcs.splice(i, 1);
+  saveServices(svcs);
+  renderCustomServices();
+}
+
+function openModal() {
+  document.getElementById('modalOverlay').classList.add('show');
+  document.getElementById('svcName').focus();
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+  document.getElementById('svcName').value = '';
+  document.getElementById('svcUrl').value = '';
+  document.getElementById('svcTag').value = '';
+}
+
+function saveService() {
+  const name = document.getElementById('svcName').value.trim();
+  const url = document.getElementById('svcUrl').value.trim();
+  const tag = document.getElementById('svcTag').value.trim();
+  const icon = document.getElementById('svcIcon').value;
+  if (!name || !url) { alert('请填写服务名称和地址'); return; }
+  const svcs = getServices();
+  svcs.push({name, url, tag, icon});
+  saveServices(svcs);
+  renderCustomServices();
+  closeModal();
+}
+
+// 点击遮罩关闭
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// 初始化渲染
+renderCustomServices();
+</script>
+
+<footer>DevOps 统一导航 · node75 · 2026 · 持续更新中</footer>
+</body>
 </html>
