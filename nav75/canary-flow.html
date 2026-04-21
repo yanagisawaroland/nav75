@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>Argo Rollouts + Istio 金丝雀发布动态流程</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; color: #1e293b; padding: 20px; }
+h2 { text-align: center; color: #1e293b; font-size: 1.2em; margin-bottom: 4px; }
+.subtitle { text-align: center; color: #64748b; font-size: 0.78em; margin-bottom: 16px; }
+
+.steps-nav { display: flex; justify-content: center; gap: 6px; margin-bottom: 16px; flex-wrap: wrap; }
+.step-btn { padding: 5px 12px; border-radius: 16px; border: 1px solid #cbd5e1; background: #fff; color: #64748b; cursor: pointer; font-size: 0.72em; transition: all 0.2s; }
+.step-btn.active { background: #2563eb; color: #fff; border-color: #2563eb; }
+.step-btn:hover { border-color: #2563eb; color: #2563eb; }
+
+.main { display: grid; grid-template-columns: 1fr 300px; gap: 14px; max-width: 1100px; margin: 0 auto; }
+
+.arch { background: #fff; border-radius: 12px; padding: 18px; border: 1px solid #e2e8f0; }
+.arch-title { font-size: 0.7em; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 14px; }
+.flow { display: flex; flex-direction: column; gap: 10px; }
+
+.trigger-row { display: flex; justify-content: center; }
+.trigger-box { background: #ede9fe; border: 1px solid #a78bfa; border-radius: 8px; padding: 7px 18px; font-size: 0.78em; color: #5b21b6; text-align: center; font-weight: 600; }
+
+.arrow-down { text-align: center; color: #94a3b8; font-size: 1.1em; line-height: 1; }
+
+.argo-box { background: #fffbeb; border: 2px solid #f59e0b; border-radius: 10px; padding: 10px 14px; }
+.argo-title { font-size: 0.7em; color: #b45309; font-weight: 700; margin-bottom: 6px; }
+.argo-action { font-size: 0.73em; color: #78350f; background: #fef3c7; border-radius: 6px; padding: 3px 10px; display: inline-block; margin-bottom: 5px; }
+.vs-update { font-size: 0.7em; color: #64748b; margin-top: 4px; }
+.vs-update span { color: #2563eb; font-weight: 700; }
+.vs-update span.canary-num { color: #d97706; }
+
+.gateway-box { background: #eff6ff; border: 2px solid #3b82f6; border-radius: 10px; padding: 10px 14px; }
+.gateway-title { font-size: 0.7em; color: #1d4ed8; font-weight: 700; margin-bottom: 8px; }
+.traffic-bar { display: flex; height: 26px; border-radius: 6px; overflow: hidden; margin-bottom: 5px; border: 1px solid #e2e8f0; }
+.stable-bar { background: #2563eb; display: flex; align-items: center; justify-content: center; font-size: 0.7em; font-weight: 700; color: #fff; transition: all 0.6s ease; white-space: nowrap; overflow: hidden; }
+.canary-bar { background: #f59e0b; display: flex; align-items: center; justify-content: center; font-size: 0.7em; font-weight: 700; color: #fff; transition: all 0.6s ease; white-space: nowrap; overflow: hidden; }
+.gateway-note { font-size: 0.67em; color: #64748b; }
+
+.pods-row { display: flex; gap: 10px; }
+.pods-group { flex: 1; background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 8px; padding: 10px; }
+.pods-label { font-size: 0.67em; color: #64748b; margin-bottom: 6px; font-weight: 700; }
+.pods-grid { display: flex; flex-wrap: wrap; gap: 4px; }
+.pod { width: 22px; height: 22px; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.55em; font-weight: 700; transition: all 0.3s; }
+.pod.stable { background: #2563eb; color: #fff; }
+.pod.canary { background: #f59e0b; color: #fff; }
+.pod.inactive { background: #f1f5f9; color: #cbd5e1; border: 1px dashed #e2e8f0; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+.analysis-box { background: #f0fdf4; border: 2px solid #22c55e; border-radius: 10px; padding: 10px 14px; }
+.analysis-title { font-size: 0.7em; color: #15803d; font-weight: 700; margin-bottom: 6px; }
+.analysis-metric { display: flex; justify-content: space-between; align-items: center; font-size: 0.72em; margin-bottom: 4px; }
+.metric-label { color: #374151; }
+.metric-value { font-weight: 700; }
+.metric-ok { color: #16a34a; }
+.metric-warn { color: #d97706; }
+.metric-fail { color: #dc2626; }
+.metric-na { color: #94a3b8; }
+
+.status-panel { display: flex; flex-direction: column; gap: 12px; }
+.status-card { background: #fff; border-radius: 10px; padding: 14px; border: 1px solid #e2e8f0; }
+.status-card-title { font-size: 0.68em; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; font-weight: 700; }
+
+.rollout-status { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.status-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+.status-dot.healthy { background: #22c55e; }
+.status-dot.progressing { background: #f59e0b; animation: pulse 1s infinite; }
+.status-dot.paused { background: #3b82f6; }
+.status-dot.degraded { background: #ef4444; }
+.status-text { font-size: 0.78em; font-weight: 700; color: #1e293b; }
+
+.step-progress { margin-bottom: 8px; }
+.step-label { font-size: 0.68em; color: #64748b; margin-bottom: 5px; }
+.step-dots { display: flex; gap: 4px; }
+.step-dot { width: 28px; height: 6px; border-radius: 3px; background: #e2e8f0; transition: all 0.3s; }
+.step-dot.done { background: #22c55e; }
+.step-dot.current { background: #f59e0b; }
+
+.revision-list { display: flex; flex-direction: column; gap: 6px; }
+.revision { background: #f8fafc; border-radius: 6px; padding: 8px 10px; font-size: 0.72em; border: 1px solid #e2e8f0; }
+.rev-header { display: flex; justify-content: space-between; margin-bottom: 3px; }
+.rev-name { color: #475569; }
+.rev-badge { padding: 1px 8px; border-radius: 10px; font-size: 0.85em; font-weight: 700; }
+.badge-stable { background: #dbeafe; color: #1d4ed8; }
+.badge-canary { background: #fef3c7; color: #b45309; }
+.badge-scaled { background: #f1f5f9; color: #94a3b8; }
+.rev-pods { color: #94a3b8; }
+
+.event-log { max-height: 130px; overflow-y: auto; }
+.event { font-size: 0.67em; padding: 3px 0; border-bottom: 1px solid #f1f5f9; display: flex; gap: 6px; }
+.event-time { color: #94a3b8; flex-shrink: 0; }
+.event-msg { color: #475569; }
+.event-msg.highlight { color: #16a34a; font-weight: 600; }
+.event-msg.warn { color: #dc2626; font-weight: 600; }
+
+.controls { display: flex; gap: 8px; justify-content: center; margin-top: 14px; flex-wrap: wrap; }
+.btn { padding: 8px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 0.78em; font-weight: 600; transition: all 0.2s; }
+.btn-primary { background: #2563eb; color: #fff; }
+.btn-primary:hover { background: #1d4ed8; }
+.btn-danger { background: #ef4444; color: #fff; }
+.btn-danger:hover { background: #dc2626; }
+.btn-gray { background: #e2e8f0; color: #475569; }
+.btn-gray:hover { background: #cbd5e1; }
+.btn:disabled { opacity: 0.35; cursor: not-allowed; }
+</style>
+
+</head>
+<body>
+<h2>🚀 Argo Rollouts + Istio 金丝雀发布动态流程</h2>
+<p class="subtitle">点击步骤按钮或使用控制按钮，观察流量权重和 Pod 状态变化</p>
+<div class="steps-nav" id="stepsNav"></div>
+
+<div class="main">
+  <div class="arch">
+    <div class="arch-title">架构流量图</div>
+    <div class="flow">
+      <div class="trigger-row">
+        <div class="trigger-box" id="triggerBox">⏳ 等待触发发布...</div>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="argo-box">
+        <div class="argo-title">⚙️ Argo Rollouts Controller</div>
+        <div class="argo-action" id="argoAction">监听中，无发布任务</div>
+        <div class="vs-update">VirtualService 权重：stable <span id="vsStable">100</span>% · canary <span id="vsCanary" class="canary-num">0</span>%</div>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="gateway-box">
+        <div class="gateway-title">🌐 Istio IngressGateway（VIP 10.20.50.50）</div>
+        <div class="traffic-bar">
+          <div class="stable-bar" id="stableBar" style="width:100%">stable 100%</div>
+          <div class="canary-bar" id="canaryBar" style="width:0%"></div>
+        </div>
+        <div class="gateway-note">nginx.devops51.lan → Envoy 按权重精确分流</div>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="pods-row">
+        <div class="pods-group">
+          <div class="pods-label">🔵 stable Pods（旧版本 nginx:alpine）</div>
+          <div class="pods-grid" id="stablePods"></div>
+        </div>
+        <div class="pods-group">
+          <div class="pods-label">🟡 canary Pods（新版本 nginx:v2）</div>
+          <div class="pods-grid" id="canaryPods"></div>
+        </div>
+      </div>
+      <div class="arrow-down">↓</div>
+      <div class="analysis-box">
+        <div class="analysis-title">📊 AnalysisRun（Prometheus 质量门禁）</div>
+        <div class="analysis-metric">
+          <span class="metric-label">canary 请求成功率</span>
+          <span class="metric-value" id="successRate">-</span>
+        </div>
+        <div class="analysis-metric">
+          <span class="metric-label">阈值要求</span>
+          <span class="metric-value metric-ok">>= 95%</span>
+        </div>
+        <div class="analysis-metric">
+          <span class="metric-label">检测结果</span>
+          <span class="metric-value" id="analysisResult">未开始</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="status-panel">
+    <div class="status-card">
+      <div class="status-card-title">Rollout 状态</div>
+      <div class="rollout-status">
+        <div class="status-dot healthy" id="statusDot"></div>
+        <div class="status-text" id="statusText">Healthy</div>
+      </div>
+      <div class="step-progress">
+        <div class="step-label" id="stepLabel">Step 0/5</div>
+        <div class="step-dots" id="stepDots"></div>
+      </div>
+    </div>
+    <div class="status-card">
+      <div class="status-card-title">Revision 列表</div>
+      <div class="revision-list" id="revisionList"></div>
+    </div>
+    <div class="status-card">
+      <div class="status-card-title">事件日志</div>
+      <div class="event-log" id="eventLog"></div>
+    </div>
+  </div>
+</div>
+
+<div class="controls">
+  <button class="btn btn-gray" onclick="goStep(0)">↺ 重置</button>
+  <button class="btn btn-primary" id="btnTrigger" onclick="triggerRelease()">🚀 触发发布</button>
+  <button class="btn btn-primary" id="btnNext" onclick="nextStep()" disabled>▶ 下一步</button>
+  <button class="btn btn-danger" id="btnAbort" onclick="abortRelease()" disabled>✕ 中止回滚</button>
+</div>
+
+<script>
+const STEPS = [
+  { label:'初始状态', sw:100, cw:0, sp:10, cp:0, status:'healthy', statusText:'Healthy', step:'0/5', action:'监听中，无发布任务', trigger:'⏳ 等待触发发布...', ar:{rate:'-',result:'未开始',cls:'metric-na'}, revs:[{name:'revision:1',badge:'stable',pods:10}], events:['系统运行正常，stable: nginx:alpine × 10'] },
+  { label:'触发发布', sw:100, cw:0, sp:10, cp:0, status:'progressing', statusText:'Progressing', step:'0/5', action:'检测到新镜像 nginx:v2，创建 canary ReplicaSet...', trigger:'🚀 set image nginx:v2 → 触发发布', ar:{rate:'-',result:'准备中...',cls:'metric-na'}, revs:[{name:'revision:2',badge:'canary',pods:0},{name:'revision:1',badge:'stable',pods:10}], events:['触发发布：nginx:alpine → nginx:v2','创建 revision:2 ReplicaSet'] },
+  { label:'Step1: 20%', sw:80, cw:20, sp:10, cp:1, status:'paused', statusText:'Paused（等待确认）', step:'1/5', action:'setWeight 20% → 自动更新 VirtualService', trigger:'🚀 新版本发布进行中...', ar:{rate:'97.3%',result:'✔ 通过（1/3）',cls:'metric-ok'}, revs:[{name:'revision:2',badge:'canary',pods:1},{name:'revision:1',badge:'stable',pods:10}], events:['VirtualService 更新：stable 80% / canary 20%','canary Pod 就绪（1个，2/2容器）','Analysis 开始检测成功率...','Analysis ✔ 成功率 97.3% >= 95%'] },
+  { label:'Step2: 等待', sw:80, cw:20, sp:10, cp:1, status:'progressing', statusText:'Progressing（pause 30s）', step:'2/5', action:'pause 30s 倒计时中...', trigger:'🚀 新版本发布进行中...', ar:{rate:'98.1%',result:'✔ 通过（2/3）',cls:'metric-ok'}, revs:[{name:'revision:2',badge:'canary',pods:1},{name:'revision:1',badge:'stable',pods:10}], events:['自动等待 30 秒...','Analysis ✔ 成功率 98.1% >= 95%'] },
+  { label:'Step3: 50%', sw:50, cw:50, sp:10, cp:1, status:'paused', statusText:'Paused（等待确认）', step:'3/5', action:'setWeight 50% → 自动更新 VirtualService', trigger:'🚀 新版本发布进行中...', ar:{rate:'96.5%',result:'✔ 通过（3/3）',cls:'metric-ok'}, revs:[{name:'revision:2',badge:'canary',pods:1},{name:'revision:1',badge:'stable',pods:10}], events:['VirtualService 更新：stable 50% / canary 50%','注意：1个canary Pod承接50%流量（Istio精确控制）','Analysis ✔ 成功率 96.5% >= 95%'] },
+  { label:'Step4: 等待', sw:50, cw:50, sp:10, cp:1, status:'progressing', statusText:'Progressing（pause 30s）', step:'4/5', action:'pause 30s 倒计时中...', trigger:'🚀 新版本发布进行中...', ar:{rate:'97.8%',result:'✔ 全部通过（3/3）',cls:'metric-ok'}, revs:[{name:'revision:2',badge:'canary',pods:1},{name:'revision:1',badge:'stable',pods:10}], events:['自动等待 30 秒...','Analysis ✔ 成功率 97.8% >= 95%','所有检测通过，准备全量发布'] },
+  { label:'Step5: 100%', sw:0, cw:100, sp:0, cp:10, status:'progressing', statusText:'Progressing（提升中）', step:'5/5', action:'提升 revision:2 为 stable，扩容至 10 个 Pod', trigger:'🚀 全量切换中...', ar:{rate:'98.5%',result:'✔ Successful',cls:'metric-ok'}, revs:[{name:'revision:2',badge:'stable',pods:10},{name:'revision:1',badge:'scaled',pods:0}], events:['setWeight 100%','revision:2 提升为 stable（nginx:v2）','扩容 canary → 10 个 Pod','revision:1 ScaledDown → 0 个 Pod'] },
+  { label:'发布完成', sw:100, cw:0, sp:10, cp:0, status:'healthy', statusText:'Healthy ✔', step:'5/5', action:'✅ 发布成功！nginx:v2 已全量上线', trigger:'✅ 发布完成！nginx:v2 全量上线', ar:{rate:'98.5%',result:'✔ Successful（全部通过）',cls:'metric-ok'}, revs:[{name:'revision:2',badge:'stable',pods:10},{name:'revision:1',badge:'scaled',pods:0}], events:['✅ 发布完成！新版本 nginx:v2 全量上线','AnalysisRun ✔ Successful','旧版本 revision:1 已销毁（ScaledDown）','VirtualService 恢复：stable 100%'] },
+  { label:'⚠️ 回滚场景', sw:100, cw:0, sp:10, cp:0, status:'healthy', statusText:'Healthy（已自动回滚）', step:'0/5', action:'Analysis 失败 → 触发自动回滚', trigger:'⚠️ Analysis 失败 → 自动回滚至旧版本', ar:{rate:'82.1%',result:'✗ 失败（连续3次 < 95%）',cls:'metric-fail'}, revs:[{name:'revision:1',badge:'stable',pods:10},{name:'revision:2',badge:'scaled',pods:0}], events:['⚠️ Analysis 失败：成功率 82.1% < 95%','连续失败 3 次，触发自动回滚！','VirtualService 恢复：stable 100%','canary Pod 全部销毁','✅ 回滚完成，服务已恢复正常'] }
+];
+
+let cur = 0, allEvents = [];
+
+function render(n) {
+  cur = n;
+  const s = STEPS[n];
+  document.getElementById('stableBar').style.width = s.sw + '%';
+  document.getElementById('stableBar').textContent = s.sw > 8 ? `stable ${s.sw}%` : '';
+  document.getElementById('canaryBar').style.width = s.cw + '%';
+  document.getElementById('canaryBar').textContent = s.cw > 8 ? `canary ${s.cw}%` : '';
+  document.getElementById('vsStable').textContent = s.sw;
+  document.getElementById('vsCanary').textContent = s.cw;
+  document.getElementById('triggerBox').textContent = s.trigger;
+  document.getElementById('argoAction').textContent = s.action;
+  document.getElementById('statusText').textContent = s.statusText;
+  document.getElementById('stepLabel').textContent = `Step ${s.step}`;
+  document.getElementById('statusDot').className = 'status-dot ' + s.status;
+  document.getElementById('successRate').textContent = s.ar.rate;
+  document.getElementById('successRate').className = 'metric-value ' + s.ar.cls;
+  document.getElementById('analysisResult').textContent = s.ar.result;
+  document.getElementById('analysisResult').className = 'metric-value ' + s.ar.cls;
+
+  const sp = document.getElementById('stablePods');
+  sp.innerHTML = Array.from({length:10},(_,i) => `<div class="pod ${i<s.sp?'stable':'inactive'}">${i<s.sp?'P':'·'}</div>`).join('');
+  const cp = document.getElementById('canaryPods');
+  cp.innerHTML = Array.from({length:10},(_,i) => `<div class="pod ${i<s.cp?'canary':'inactive'}">${i<s.cp?'P':'·'}</div>`).join('');
+
+  document.getElementById('revisionList').innerHTML = s.revs.map(r => `
+    <div class="revision">
+      <div class="rev-header"><span class="rev-name">⟳ ${r.name}</span><span class="rev-badge badge-${r.badge}">${r.badge}</span></div>
+      <div class="rev-pods">Pods: ${r.pods} ${r.pods>0?'✔ Running':'(ScaledDown)'}</div>
+    </div>`).join('');
+
+  const [c,t] = s.step.split('/').map(Number);
+  document.getElementById('stepDots').innerHTML = Array.from({length:t||5},(_,i) =>
+    `<div class="step-dot ${i<c?'done':i===c-1&&c>0?'current':''}"></div>`).join('');
+
+  const time = new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  s.events.forEach(msg => allEvents.unshift({time, msg, h:msg.includes('✅')||msg.includes('✔'), w:msg.includes('⚠️')||msg.includes('✗')}));
+  document.getElementById('eventLog').innerHTML = allEvents.slice(0,20).map(e =>
+    `<div class="event"><span class="event-time">${e.time}</span><span class="event-msg ${e.h?'highlight':e.w?'warn':''}">${e.msg}</span></div>`).join('');
+
+  document.getElementById('stepsNav').innerHTML = STEPS.map((s,i) =>
+    `<button class="step-btn ${i===n?'active':''}" onclick="render(${i})">${s.label}</button>`).join('');
+
+  document.getElementById('btnTrigger').disabled = n > 0 && n < 7;
+  document.getElementById('btnNext').disabled = n === 0 || n >= STEPS.length - 2;
+  document.getElementById('btnAbort').disabled = n < 2 || n >= 7;
+}
+
+function triggerRelease() { allEvents=[]; render(1); setTimeout(()=>render(2),700); }
+function nextStep() { if(cur < STEPS.length-2) render(cur+1); }
+function abortRelease() { render(8); }
+
+render(0);
+</script>
+
+</body>
+</html>

@@ -1,0 +1,20 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: podinfo
+  namespace: production
+  annotations:
+    nginx.ingress.kubernetes.io/canary: "false"
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: podinfo.devops.local
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: podinfo-stable
+                port:
+                  number: 9898

@@ -1,0 +1,382 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>故障传播与熔断保护动画</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { background: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif; color: #1e293b; padding: 20px; }
+h2 { text-align: center; font-size: 1.2em; margin-bottom: 4px; }
+.subtitle { text-align: center; color: #64748b; font-size: 0.78em; margin-bottom: 16px; }
+
+.scenario-tabs { display: flex; justify-content: center; gap: 8px; margin-bottom: 16px; }
+.stab { padding: 7px 16px; border-radius: 20px; border: 1px solid #e2e8f0; background: #fff; color: #64748b; cursor: pointer; font-size: 0.75em; font-weight: 600; transition: all 0.2s; }
+.stab.active { background: #dc2626; color: #fff; border-color: #dc2626; }
+.stab.green.active { background: #16a34a; border-color: #16a34a; }
+.stab:hover:not(.active) { border-color: #94a3b8; }
+
+.main { display: grid; grid-template-columns: 1fr 280px; gap: 14px; max-width: 1000px; margin: 0 auto; }
+
+.canvas { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 20px; }
+.canvas-title { font-size: 0.7em; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 16px; font-weight: 700; }
+
+/* 服务节点 */
+.services { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+.svc-row { display: flex; gap: 10px; align-items: center; justify-content: center; }
+.svc-node { border-radius: 10px; padding: 10px 14px; text-align: center; width: 110px; border: 2px solid; transition: all 0.4s; position: relative; cursor: default; }
+.svc-name { font-size: 0.75em; font-weight: 700; margin-bottom: 2px; }
+.svc-status { font-size: 0.62em; }
+.svc-badge { position: absolute; top: -8px; right: -8px; border-radius: 10px; padding: 1px 6px; font-size: 0.58em; font-weight: 700; border: 2px solid #fff; }
+
+/* 状态颜色 */
+.svc-ok { background: #f0fdf4; border-color: #22c55e; color: #15803d; }
+.svc-slow { background: #fffbeb; border-color: #f59e0b; color: #92400e; }
+.svc-error { background: #fef2f2; border-color: #ef4444; color: #b91c1c; }
+.svc-broken { background: #fef2f2; border-color: #dc2626; color: #991b1b; }
+.svc-circuit { background: #f5f3ff; border-color: #8b5cf6; color: #6d28d9; }
+.badge-ok { background: #22c55e; color: #fff; }
+.badge-slow { background: #f59e0b; color: #fff; }
+.badge-error { background: #ef4444; color: #fff; }
+.badge-circuit { background: #8b5cf6; color: #fff; }
+
+/* 箭头 */
+.flow-arrow { display: flex; align-items: center; justify-content: center; font-size: 0.7em; color: #94a3b8; gap: 4px; }
+.flow-arrow.danger { color: #ef4444; }
+.flow-arrow.warn { color: #f59e0b; }
+.flow-arrow.circuit-break { color: #8b5cf6; }
+.flow-arrow span { font-size: 1.3em; }
+
+/* 用户请求 */
+.user-row { display: flex; justify-content: center; margin-bottom: 4px; }
+.user-box { background: #ede9fe; border: 2px solid #a78bfa; border-radius: 8px; padding: 7px 20px; font-size: 0.78em; font-weight: 600; color: #5b21b6; }
+
+/* 右侧面板 */
+.panel { display: flex; flex-direction: column; gap: 10px; }
+.panel-card { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; }
+.panel-title { font-size: 0.68em; color: #94a3b8; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; font-weight: 700; }
+
+.metric { display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; }
+.metric-label { font-size: 0.72em; color: #475569; }
+.metric-val { font-size: 0.78em; font-weight: 700; }
+.val-ok { color: #16a34a; }
+.val-warn { color: #d97706; }
+.val-bad { color: #dc2626; }
+.val-purple { color: #7c3aed; }
+
+.log { max-height: 150px; overflow-y: auto; }
+.log-item { font-size: 0.67em; padding: 3px 0; border-bottom: 1px solid #f1f5f9; display: flex; gap: 5px; }
+.log-time { color: #94a3b8; flex-shrink: 0; }
+.log-msg { }
+.log-msg.ok { color: #16a34a; }
+.log-msg.warn { color: #d97706; }
+.log-msg.error { color: #dc2626; }
+.log-msg.circuit { color: #7c3aed; font-weight: 600; }
+.log-msg.recover { color: #16a34a; font-weight: 600; }
+
+.explain { background: #fff; border: 1px solid #e2e8f0; border-radius: 10px; padding: 12px; margin-top: 10px; font-size: 0.75em; line-height: 1.6; color: #475569; }
+.explain strong { color: #1e293b; }
+
+.controls { display: flex; gap: 8px; justify-content: center; margin-top: 14px; }
+.btn { padding: 8px 20px; border-radius: 8px; border: none; cursor: pointer; font-size: 0.78em; font-weight: 600; transition: all 0.2s; }
+.btn-red { background: #dc2626; color: #fff; }
+.btn-red:hover { background: #b91c1c; }
+.btn-green { background: #16a34a; color: #fff; }
+.btn-green:hover { background: #15803d; }
+.btn-gray { background: #e2e8f0; color: #475569; }
+.btn-gray:hover { background: #cbd5e1; }
+.btn:disabled { opacity: 0.35; cursor: not-allowed; }
+
+@keyframes shake { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-3px)} 75%{transform:translateX(3px)} }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.5} }
+.shaking { animation: shake 0.4s infinite; }
+.pulsing { animation: pulse 1s infinite; }
+</style>
+
+</head>
+<body>
+<h2>⚡ 故障传播与熔断保护动画</h2>
+<p class="subtitle">演示微服务雪崩效应，以及 Istio 熔断如何保护系统</p>
+
+<div class="scenario-tabs">
+  <div class="stab active" id="tab0" onclick="setScenario(0)">😱 无保护：雪崩效应</div>
+  <div class="stab green" id="tab1" onclick="setScenario(1)">🛡️ 有熔断：Istio保护</div>
+</div>
+
+<div class="main">
+  <div class="canvas">
+    <div class="canvas-title" id="canvasTitle">故障传播演示</div>
+
+```
+<div class="user-row">
+  <div class="user-box" id="userBox">👤 用户请求（正常）</div>
+</div>
+<div class="flow-arrow" id="arrow0"><span>↓</span> <span id="arrow0txt">正常流量</span></div>
+
+<!-- 第一层 -->
+<div class="svc-row">
+  <div class="svc-node svc-ok" id="svc-gateway">
+    <div class="svc-badge badge-ok" id="badge-gateway">OK</div>
+    <div class="svc-name">🌐 Gateway</div>
+    <div class="svc-status" id="status-gateway">正常响应</div>
+  </div>
+</div>
+<div class="flow-arrow" id="arrow1"><span>↓</span> <span id="arrow1txt">路由转发</span></div>
+
+<!-- 第二层 -->
+<div class="svc-row">
+  <div class="svc-node svc-ok" id="svc-order">
+    <div class="svc-badge badge-ok" id="badge-order">OK</div>
+    <div class="svc-name">🛒 订单服务</div>
+    <div class="svc-status" id="status-order">正常响应</div>
+  </div>
+  <div class="svc-node svc-ok" id="svc-user">
+    <div class="svc-badge badge-ok" id="badge-user">OK</div>
+    <div class="svc-name">👤 用户服务</div>
+    <div class="svc-status" id="status-user">正常响应</div>
+  </div>
+</div>
+<div class="flow-arrow" id="arrow2"><span>↓</span> <span id="arrow2txt">依赖调用</span></div>
+
+<!-- 第三层 -->
+<div class="svc-row">
+  <div class="svc-node svc-ok" id="svc-payment">
+    <div class="svc-badge badge-ok" id="badge-payment">OK</div>
+    <div class="svc-name">💳 支付服务</div>
+    <div class="svc-status" id="status-payment">正常响应</div>
+  </div>
+  <div class="svc-node svc-ok" id="svc-inventory">
+    <div class="svc-badge badge-ok" id="badge-inventory">OK</div>
+    <div class="svc-name">📦 库存服务</div>
+    <div class="svc-status" id="status-inventory">正常响应</div>
+  </div>
+</div>
+<div class="flow-arrow" id="arrow3"><span>↓</span> <span id="arrow3txt">数据库查询</span></div>
+
+<!-- 第四层 -->
+<div class="svc-row">
+  <div class="svc-node svc-ok" id="svc-db">
+    <div class="svc-badge badge-ok" id="badge-db">OK</div>
+    <div class="svc-name">🗄️ 数据库</div>
+    <div class="svc-status" id="status-db">正常响应</div>
+  </div>
+</div>
+```
+
+  </div>
+
+  <div class="panel">
+    <div class="panel-card">
+      <div class="panel-title">实时指标</div>
+      <div class="metric"><span class="metric-label">请求成功率</span><span class="metric-val" id="m-success">100%</span></div>
+      <div class="metric"><span class="metric-label">平均响应时间</span><span class="metric-val" id="m-latency">50ms</span></div>
+      <div class="metric"><span class="metric-label">错误率</span><span class="metric-val" id="m-error">0%</span></div>
+      <div class="metric"><span class="metric-label">熔断状态</span><span class="metric-val" id="m-circuit">关闭</span></div>
+    </div>
+    <div class="panel-card">
+      <div class="panel-title">事件日志</div>
+      <div class="log" id="logPanel"></div>
+    </div>
+  </div>
+</div>
+
+<div class="explain" id="explainBox">
+  <strong>当前状态：系统正常运行</strong><br>
+  所有服务健康，请求正常处理。点击下方按钮模拟故障注入。
+</div>
+
+<div class="controls">
+  <button class="btn btn-gray" onclick="reset()">↺ 重置</button>
+  <button class="btn btn-red" id="btnFault" onclick="startFault()">💥 注入故障（DB慢查询）</button>
+  <button class="btn btn-green" id="btnRecover" onclick="recover()" disabled>✅ 故障恢复</button>
+</div>
+
+<script>
+let scenario = 0; // 0=无保护 1=有熔断
+let logs = [];
+let timer = null;
+let step = 0;
+
+function addLog(msg, cls) {
+  const t = new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  logs.unshift({t, msg, cls});
+  const panel = document.getElementById('logPanel');
+  panel.innerHTML = logs.slice(0,20).map(l =>
+    `<div class="log-item"><span class="log-time">${l.t}</span><span class="log-msg ${l.cls}">${l.msg}</span></div>`
+  ).join('');
+}
+
+function setSvc(id, cls, badge, badgeCls, status, shake=false) {
+  const el = document.getElementById('svc-'+id);
+  el.className = 'svc-node ' + cls + (shake?' shaking':'');
+  document.getElementById('badge-'+id).textContent = badge;
+  document.getElementById('badge-'+id).className = 'svc-badge ' + badgeCls;
+  document.getElementById('status-'+id).textContent = status;
+}
+
+function setArrow(id, txt, cls) {
+  document.getElementById('arrow'+id).className = 'flow-arrow ' + cls;
+  document.getElementById('arrow'+id+'txt').textContent = txt;
+}
+
+function setMetrics(success, latency, error, circuit, successCls, latencyCls, errorCls, circuitCls) {
+  document.getElementById('m-success').textContent = success;
+  document.getElementById('m-success').className = 'metric-val ' + successCls;
+  document.getElementById('m-latency').textContent = latency;
+  document.getElementById('m-latency').className = 'metric-val ' + latencyCls;
+  document.getElementById('m-error').textContent = error;
+  document.getElementById('m-error').className = 'metric-val ' + errorCls;
+  document.getElementById('m-circuit').textContent = circuit;
+  document.getElementById('m-circuit').className = 'metric-val ' + circuitCls;
+}
+
+function reset() {
+  if(timer) clearTimeout(timer);
+  step = 0; logs = [];
+  document.getElementById('logPanel').innerHTML = '';
+  document.getElementById('userBox').textContent = '👤 用户请求（正常）';
+  document.getElementById('userBox').style.background = '#ede9fe';
+  document.getElementById('userBox').style.borderColor = '#a78bfa';
+  ['gateway','order','user','payment','inventory','db'].forEach(id => setSvc(id,'svc-ok','OK','badge-ok','正常响应'));
+  setArrow(0,'正常流量',''); setArrow(1,'路由转发',''); setArrow(2,'依赖调用',''); setArrow(3,'数据库查询','');
+  setMetrics('100%','50ms','0%','关闭','val-ok','val-ok','val-ok','val-ok');
+  document.getElementById('explainBox').innerHTML = '<strong>当前状态：系统正常运行</strong><br>所有服务健康，请求正常处理。点击下方按钮模拟故障注入。';
+  document.getElementById('btnFault').disabled = false;
+  document.getElementById('btnRecover').disabled = true;
+}
+
+function startFault() {
+  document.getElementById('btnFault').disabled = true;
+  document.getElementById('btnRecover').disabled = false;
+  if(scenario === 0) runAvalanche();
+  else runCircuitBreaker();
+}
+
+function runAvalanche() {
+  // Step 1: DB 开始慢
+  addLog('⚠️ DB 响应变慢（慢查询）', 'warn');
+  setSvc('db', 'svc-slow pulsing', 'SLOW', 'badge-slow', '响应 3000ms');
+  setArrow(3, '⏱️ 慢查询 3000ms', 'warn');
+  setMetrics('95%','800ms','5%','关闭','val-warn','val-warn','val-warn','val-ok');
+  document.getElementById('explainBox').innerHTML = '<strong>第1步：数据库出现慢查询</strong><br>DB响应时间从50ms升至3000ms，上游服务开始等待。';
+
+  timer = setTimeout(() => {
+    // Step 2: 库存、支付开始堆积
+    addLog('⚠️ 库存服务线程池堆积', 'warn');
+    addLog('⚠️ 支付服务等待DB超时', 'warn');
+    setSvc('inventory', 'svc-slow pulsing', 'SLOW', 'badge-slow', '线程堆积');
+    setSvc('payment', 'svc-slow pulsing', 'SLOW', 'badge-slow', '等待超时');
+    setArrow(2, '⏱️ 大量请求堆积', 'warn');
+    setMetrics('80%','2500ms','20%','关闭','val-warn','val-bad','val-bad','val-ok');
+    document.getElementById('explainBox').innerHTML = '<strong>第2步：故障开始向上传播</strong><br>支付服务和库存服务线程池耗尽，开始堆积大量等待请求。';
+  }, 1500);
+
+  timer = setTimeout(() => {
+    // Step 3: 订单服务崩溃
+    addLog('❌ 支付服务崩溃！OOM', 'error');
+    addLog('❌ 库存服务崩溃！连接超时', 'error');
+    addLog('❌ 订单服务大量报错', 'error');
+    setSvc('payment', 'svc-error shaking', 'DOWN', 'badge-error', '💥 已崩溃');
+    setSvc('inventory', 'svc-error shaking', 'DOWN', 'badge-error', '💥 已崩溃');
+    setSvc('order', 'svc-error shaking', 'ERROR', 'badge-error', '大量500错误');
+    setArrow(1, '❌ 大量请求失败', 'danger');
+    setMetrics('30%','8000ms','70%','关闭','val-bad','val-bad','val-bad','val-ok');
+    document.getElementById('explainBox').innerHTML = '<strong>第3步：雪崩效应！</strong><br>支付/库存服务崩溃，订单服务连锁失败。一个DB慢查询导致多个服务崩溃！';
+  }, 3000);
+
+  timer = setTimeout(() => {
+    // Step 4: 全面崩溃
+    addLog('❌ 订单服务崩溃！', 'error');
+    addLog('❌ 用户服务崩溃！', 'error');
+    addLog('❌ Gateway 无法响应', 'error');
+    ['order','user','gateway'].forEach(id => setSvc(id,'svc-error shaking','DOWN','badge-error','💥 已崩溃'));
+    setArrow(0, '❌ 服务完全不可用', 'danger');
+    document.getElementById('userBox').textContent = '👤 用户看到：502 Bad Gateway 😱';
+    document.getElementById('userBox').style.background = '#fef2f2';
+    document.getElementById('userBox').style.borderColor = '#ef4444';
+    setMetrics('0%','timeout','100%','关闭','val-bad','val-bad','val-bad','val-ok');
+    document.getElementById('explainBox').innerHTML = '<strong>💥 系统全面崩溃！雪崩效应完成</strong><br>一个DB慢查询 → 线程堆积 → OOM → 连锁崩溃 → 整个系统不可用！<br><br>如果有 Istio 熔断，故障会在第2步就被截断！';
+  }, 5000);
+}
+
+function runCircuitBreaker() {
+  // Step 1: DB 开始慢
+  addLog('⚠️ DB 响应变慢（慢查询）', 'warn');
+  setSvc('db', 'svc-slow pulsing', 'SLOW', 'badge-slow', '响应 3000ms');
+  setArrow(3, '⏱️ 慢查询 3000ms', 'warn');
+  setMetrics('95%','800ms','5%','关闭','val-warn','val-warn','val-warn','val-ok');
+  document.getElementById('explainBox').innerHTML = '<strong>第1步：数据库出现慢查询</strong><br>DB响应时间升至3000ms，Istio Envoy开始记录错误。';
+
+  timer = setTimeout(() => {
+    addLog('⚠️ 支付服务连续5次超时', 'warn');
+    addLog('🔌 Istio检测到异常，准备熔断...', 'circuit');
+    setSvc('payment', 'svc-slow', 'SLOW', 'badge-slow', '连续超时');
+    setMetrics('85%','1200ms','15%','检测中...','val-warn','val-warn','val-bad','val-purple');
+    document.getElementById('explainBox').innerHTML = '<strong>第2步：Istio Envoy 检测到异常</strong><br>支付服务连续5次5xx错误，达到 consecutive5xxErrors 阈值，触发熔断！';
+  }, 1500);
+
+  timer = setTimeout(() => {
+    // 熔断触发！
+    addLog('🔌 支付服务熔断触发！', 'circuit');
+    addLog('✅ 请求不再转发到支付服务', 'circuit');
+    addLog('✅ 快速返回503，不等待超时', 'circuit');
+    setSvc('payment', 'svc-circuit', '断路', 'badge-circuit', '⚡ 已熔断');
+    setSvc('inventory', 'svc-ok', 'OK', 'badge-ok', '正常响应');
+    setArrow(2, '⚡ 支付已熔断，其他正常', 'circuit-break');
+    setMetrics('90%','150ms','10%','OPEN（熔断）','val-warn','val-ok','val-warn','val-purple');
+    document.getElementById('explainBox').innerHTML = '<strong>第3步：熔断器打开！🛡️</strong><br>Envoy 不再转发请求到支付服务，直接返回503。<br>其他服务（库存/订单）完全不受影响！故障被截断！';
+  }, 3000);
+
+  timer = setTimeout(() => {
+    addLog('📊 熔断持续30秒，等待恢复...', 'circuit');
+    addLog('✅ 订单/用户服务完全正常', 'ok');
+    addLog('✅ 用户仍可浏览商品/查看订单', 'ok');
+    setMetrics('92%','120ms','8%','OPEN（熔断中）','val-warn','val-ok','val-warn','val-purple');
+    document.getElementById('explainBox').innerHTML = '<strong>第4步：系统降级运行 ✅</strong><br>支付功能暂时不可用，但其他功能完全正常。<br>用户可以浏览商品、查看订单，只是无法支付。<br><br>30秒后 Istio 自动探测，若DB恢复则关闭熔断器。';
+  }, 4500);
+}
+
+function recover() {
+  if(timer) clearTimeout(timer);
+  addLog('✅ DB 慢查询已修复', 'recover');
+  setSvc('db', 'svc-ok', 'OK', 'badge-ok', '正常响应 50ms');
+  setArrow(3, '数据库查询', '');
+
+  setTimeout(() => {
+    addLog('✅ Istio 半开状态，探测支付服务', 'circuit');
+    setSvc('payment', 'svc-slow', 'HALF', 'badge-slow', '探测中...');
+    setMetrics('95%','200ms','5%','HALF-OPEN','val-warn','val-ok','val-warn','val-purple');
+  }, 800);
+
+  setTimeout(() => {
+    addLog('✅ 探测成功！关闭熔断器', 'recover');
+    addLog('✅ 支付服务恢复正常', 'recover');
+    ['gateway','order','user','payment','inventory','db'].forEach(id => {
+      const el = document.getElementById('svc-'+id);
+      el.classList.remove('shaking','pulsing');
+      setSvc(id,'svc-ok','OK','badge-ok','正常响应');
+    });
+    setArrow(0,'正常流量',''); setArrow(1,'路由转发',''); setArrow(2,'依赖调用',''); setArrow(3,'数据库查询','');
+    document.getElementById('userBox').textContent = '👤 用户请求（正常）';
+    document.getElementById('userBox').style.background = '#ede9fe';
+    document.getElementById('userBox').style.borderColor = '#a78bfa';
+    setMetrics('100%','50ms','0%','关闭','val-ok','val-ok','val-ok','val-ok');
+    document.getElementById('explainBox').innerHTML = '<strong>✅ 系统完全恢复！</strong><br>Istio 熔断自动探测到 DB 恢复，关闭熔断器，所有服务恢复正常。<br><br>整个过程：无需人工干预，自动保护，自动恢复！';
+    document.getElementById('btnFault').disabled = false;
+    document.getElementById('btnRecover').disabled = true;
+  }, 2000);
+}
+
+function setScenario(n) {
+  scenario = n;
+  reset();
+  document.getElementById('tab0').classList.toggle('active', n===0);
+  document.getElementById('tab1').classList.toggle('active', n===1);
+  document.getElementById('btnFault').textContent = n===0 ? '💥 注入故障（DB慢查询）' : '💥 注入故障（看熔断保护）';
+}
+
+reset();
+</script>
+
+</body>
+</html>

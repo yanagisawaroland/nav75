@@ -1,0 +1,17 @@
+startDelaySeconds: 0
+ssl: false
+lowercaseOutputName: true
+lowercaseOutputLabelNames: true
+rules:
+  - pattern: 'java.lang<type=Memory><(\w+)MemoryUsage>(\w+)'
+    name: jvm_memory_$1_$2_bytes
+    type: GAUGE
+  - pattern: 'java.lang<type=GarbageCollector, name="(.+)"><>CollectionCount'
+    name: jvm_gc_collection_count_total
+    labels:
+      gc: "$1"
+    type: COUNTER
+  - pattern: 'java.lang<type=Threading><>(\w+)'
+    name: jvm_threads_$1
+    type: GAUGE
+  - pattern: '.*'

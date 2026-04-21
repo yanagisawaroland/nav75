@@ -1,0 +1,43 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: podinfo
+  namespace: production
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: podinfo
+  template:
+    metadata:
+      labels:
+        app: podinfo
+    spec:
+      containers:
+        - name: podinfo
+          image: harbor.devops.local:7581/devops/podinfo:latest
+          ports:
+            - containerPort: 9898
+          env:
+            - name: PODINFO_UI_COLOR
+              value: "#00d4aa"
+  strategy:
+    canary:
+      stableService: podinfo-stable
+      canaryService: podinfo-canary
+      trafficRouting:
+        nginx:
+          stableIngress: podinfo
+      analysis:
+        templates:
+          - templateName: success-rate
+        args:
+          - name: ingress-name
+            value: podinfo
+      steps:
+        - setWeight: 20
+        - pause: {duration: 30s}
+        - setWeight: 50
+        - pause: {duration: 30s}
+        - setWeight: 80
+        - pause: {duration: 30s}

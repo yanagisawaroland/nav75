@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>B环境 devops51</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:#f0f2f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;padding:20px 16px;color:#1a1a2e}
+.header{text-align:center;margin-bottom:28px}
+.header h1{font-size:1.7em;color:#1a1a2e;margin-bottom:4px}
+.header p{color:#888;font-size:0.8em}
+.nav-tabs{display:flex;justify-content:center;gap:8px;margin-bottom:24px;flex-wrap:wrap}
+.nav-tabs a{padding:8px 20px;border-radius:20px;text-decoration:none;font-size:0.82em;font-weight:600;border:1px solid #e0e0e0;background:#fff;color:#555;transition:all 0.2s}
+.nav-tabs a:hover,.nav-tabs a.active{background:#1a1a2e;color:#fff;border-color:#1a1a2e}
+.section{max-width:1100px;margin:0 auto 22px}
+.section-title{font-size:0.7em;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#999;margin-bottom:10px;padding-left:4px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:10px}
+.card{background:#fff;border:1px solid #e8e8e8;border-radius:12px;padding:13px 15px;text-decoration:none;color:#1a1a2e;transition:all 0.2s;display:flex;align-items:flex-start;gap:10px;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
+.card:hover{box-shadow:0 4px 14px rgba(0,0,0,0.1);transform:translateY(-2px);border-color:#d0d0d0}
+.card.pending{opacity:0.5;cursor:default}
+.card.pending:hover{transform:none;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
+.icon{font-size:1.3em;width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:8px;flex-shrink:0}
+.info{flex:1;min-width:0}
+.name{font-size:0.86em;font-weight:700;margin-bottom:2px}
+.url{font-size:0.66em;color:#3b82f6;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.url2{font-size:0.63em;color:#6b7280;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:1px}
+.tag{font-size:0.62em;color:#888;margin-top:2px}
+.pending-badge{font-size:0.6em;background:#fef3c7;color:#92400e;padding:1px 6px;border-radius:8px;margin-top:2px;display:inline-block}
+.bg-blue{background:#dbeafe}.bg-orange{background:#ffedd5}.bg-purple{background:#ede9fe}
+.bg-green{background:#dcfce7}.bg-red{background:#fee2e2}.bg-yellow{background:#fef9c3}
+.bg-cyan{background:#cffafe}.bg-teal{background:#ccfbf1}.bg-indigo{background:#e0e7ff}
+.bg-pink{background:#fce7f3}.bg-gray{background:#f3f4f6}
+footer{text-align:center;color:#ccc;font-size:0.7em;margin-top:16px}
+
+/* 自定义服务功能 */
+.add-btn-row{max-width:1100px;margin:0 auto 10px;display:flex;justify-content:flex-end}
+.add-btn{background:#2563eb;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-size:0.78em;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all 0.2s}
+.add-btn:hover{background:#1d4ed8}
+.custom-section-title{font-size:0.7em;font-weight:700;text-transform:uppercase;letter-spacing:2px;color:#2563eb;margin-bottom:10px;padding-left:4px;display:flex;align-items:center;gap:6px}
+.custom-badge{background:#dbeafe;color:#1d4ed8;border-radius:10px;padding:1px 8px;font-size:0.85em}
+.custom-card{position:relative}
+.card-del{position:absolute;top:6px;right:6px;background:#fee2e2;color:#dc2626;border:none;border-radius:4px;padding:1px 6px;font-size:0.6em;cursor:pointer;opacity:0;transition:opacity 0.2s}
+.custom-card:hover .card-del{opacity:1}
+
+/* 弹窗 */
+.modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:1000;align-items:center;justify-content:center}
+.modal-overlay.show{display:flex}
+.modal{background:#fff;border-radius:14px;padding:24px;width:360px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,0.15)}
+.modal h3{font-size:0.95em;font-weight:700;color:#1a1a2e;margin-bottom:16px}
+.form-group{margin-bottom:12px}
+.form-group label{display:block;font-size:0.72em;font-weight:600;color:#374151;margin-bottom:4px}
+.form-group input,.form-group select{width:100%;border:1px solid #e2e8f0;border-radius:8px;padding:7px 10px;font-size:0.78em;color:#1a1a2e;outline:none;transition:border 0.2s}
+.form-group input:focus,.form-group select:focus{border-color:#2563eb}
+.modal-btns{display:flex;gap:8px;justify-content:flex-end;margin-top:16px}
+.modal-btn{padding:7px 18px;border-radius:8px;border:none;cursor:pointer;font-size:0.78em;font-weight:600}
+.modal-btn-primary{background:#2563eb;color:#fff}
+.modal-btn-primary:hover{background:#1d4ed8}
+.modal-btn-cancel{background:#f1f5f9;color:#475569}
+.modal-btn-cancel:hover{background:#e2e8f0}
+</style>
+
+</head>
+<body>
+<div class="header">
+  <h1>🚀 DevOps 统一导航</h1>
+  <p>k3s v1.34.6 · Istio v1.24.3 · MetalLB VIP 10.20.50.50</p>
+</div>
+<div class="nav-tabs">
+  <a href="index.html">🌐 主页</a>
+  <a href="env-a.html">🅰️ A环境</a>
+  <a href="env-b.html" class="active">🅱️ B环境</a>
+  <a href="env-c.html">©️ C环境</a>
+</div>
+<div class="section">
+  <div class="section-title">☸️ 基础平台</div>
+  <div class="grid">
+    <a class="card" href="#" onclick="return false">
+      <div class="icon bg-purple">🐙</div>
+      <div class="info"><div class="name">ArgoCD</div><div class="url">argocd.devops51.lan</div><div class="pending-badge">⏳ 待部署/配置域名</div></div>
+    </a>
+  </div>
+</div>
+<div class="section">
+  <div class="section-title">📊 监控告警</div>
+  <div class="grid">
+    <a class="card" href="#" onclick="return false">
+      <div class="icon bg-orange">📊</div>
+      <div class="info"><div class="name">Grafana</div><div class="url">grafana.devops51.lan</div><div class="pending-badge">⏳ 待部署/配置域名</div></div>
+    </a>
+    <a class="card" href="http://prometheus.devops51.lan" target="_blank">
+      <div class="icon bg-red">🔥</div>
+      <div class="info"><div class="name">Prometheus</div><div class="url">http://prometheus.devops51.lan</div><div class="url2">10.20.50.51:32301</div></div>
+    </a>
+    <a class="card" href="#" onclick="return false">
+      <div class="icon bg-yellow">🔔</div>
+      <div class="info"><div class="name">AlertManager</div><div class="url">alertmanager.devops51.lan</div><div class="pending-badge">⏳ 待部署/配置域名</div></div>
+    </a>
+  </div>
+</div>
+<div class="section">
+  <div class="section-title">📋 日志</div>
+  <div class="grid">
+    <a class="card" href="#" onclick="return false">
+      <div class="icon bg-green">🔍</div>
+      <div class="info"><div class="name">Kibana</div><div class="url">kibana.devops51.lan</div><div class="pending-badge">⏳ 待部署/配置域名</div></div>
+    </a>
+    <a class="card" href="#" onclick="return false">
+      <div class="icon bg-cyan">🔎</div>
+      <div class="info"><div class="name">Elasticsearch</div><div class="url">elasticsearch.devops51.lan</div><div class="pending-badge">⏳ 待部署/配置域名</div></div>
+    </a>
+    <a class="card" href="#" onclick="return false">
+      <div class="icon bg-indigo">🔭</div>
+      <div class="info"><div class="name">Jaeger</div><div class="url">jaeger.devops51.lan</div><div class="pending-badge">⏳ 待部署/配置域名</div></div>
+    </a>
+  </div>
+</div>
+<div class="section">
+  <div class="section-title">🕸️ 服务网格 Istio v1.24.3</div>
+  <div class="grid">
+    <a class="card" href="http://kiali.devops51.lan" target="_blank">
+      <div class="icon bg-blue">🕸️</div>
+      <div class="info"><div class="name">Kiali</div><div class="url">http://kiali.devops51.lan</div><div class="url2">10.20.50.51:32020</div><div class="tag">admin / admin</div></div>
+    </a>
+    <a class="card" href="http://10.20.50.50" target="_blank">
+      <div class="icon bg-teal">🌐</div>
+      <div class="info"><div class="name">Istio Ingress HTTP</div><div class="url">http://10.20.50.50</div><div class="tag">VIP · 无需端口</div></div>
+    </a>
+  </div>
+</div>
+<div class="section">
+  <div class="section-title">☕ 应用</div>
+  <div class="grid">
+    <a class="card" href="http://nginx.devops51.lan" target="_blank">
+      <div class="icon bg-green">🌿</div>
+      <div class="info"><div class="name">nginx 测试应用</div><div class="url">http://nginx.devops51.lan</div><div class="tag">金丝雀测试</div></div>
+    </a>
+    <a class="card" href="#" onclick="return false">
+      <div class="icon bg-green">☕</div>
+      <div class="info"><div class="name">tomcat5 staging</div><div class="url">tomcat5-staging.devops51.lan</div><div class="pending-badge">⏳ 待部署/配置域名</div></div>
+    </a>
+    <a class="card" href="#" onclick="return false">
+      <div class="icon bg-blue">☕</div>
+      <div class="info"><div class="name">tomcat5 production</div><div class="url">tomcat5-production.devops51.lan</div><div class="pending-badge">⏳ 待部署/配置域名</div></div>
+    </a>
+  </div>
+</div>
+<div class="section">
+  <div class="section-title">🖥️ 节点信息</div>
+  <div class="grid">
+    <a class="card" href="http://10.20.50.51" target="_blank">
+      <div class="icon bg-gray">🖥️</div>
+      <div class="info"><div class="name">master51</div><div class="url">http://10.20.50.51</div><div class="tag">root / remanco · k3s Master</div></div>
+    </a>
+    <a class="card" href="http://10.20.50.52" target="_blank">
+      <div class="icon bg-gray">🖥️</div>
+      <div class="info"><div class="name">node52</div><div class="url">http://10.20.50.52</div><div class="tag">root / remanco · k3s Worker</div></div>
+    </a>
+  </div>
+</div>
+
+<!-- 自定义服务区域 -->
+
+<div class="add-btn-row">
+  <button class="add-btn" onclick="openModal()">➕ 添加自定义服务</button>
+</div>
+<div class="section" id="customServices" style="display:none">
+  <div class="custom-section-title">⭐ 自定义服务 <span class="custom-badge">本地存储</span></div>
+  <div class="grid" id="customGrid"></div>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3>➕ 添加自定义服务</h3>
+    <div class="form-group">
+      <label>服务名称 *</label>
+      <input type="text" id="svcName" placeholder="例如：Grafana">
+    </div>
+    <div class="form-group">
+      <label>访问地址 *</label>
+      <input type="text" id="svcUrl" placeholder="例如：http://grafana.devops51.lan">
+    </div>
+    <div class="form-group">
+      <label>备注说明</label>
+      <input type="text" id="svcTag" placeholder="例如：admin / admin">
+    </div>
+    <div class="form-group">
+      <label>图标</label>
+      <select id="svcIcon">
+        <option value="🔗">🔗 通用链接</option>
+        <option value="📊">📊 监控/图表</option>
+        <option value="🔥">🔥 Prometheus</option>
+        <option value="🕸️">🕸️ Istio/Kiali</option>
+        <option value="🐙">🐙 ArgoCD</option>
+        <option value="🐳">🐳 Harbor</option>
+        <option value="🌐">🌐 网关/入口</option>
+        <option value="☕">☕ Java应用</option>
+        <option value="🌿">🌿 测试应用</option>
+        <option value="🗄️">🗄️ 数据库</option>
+        <option value="📋">📋 日志</option>
+        <option value="🔔">🔔 告警</option>
+      </select>
+    </div>
+    <div class="modal-btns">
+      <button class="modal-btn modal-btn-cancel" onclick="closeModal()">取消</button>
+      <button class="modal-btn modal-btn-primary" onclick="saveService()">保存</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const ENV_KEY = 'nav_custom_b';
+
+function getServices() {
+  try { return JSON.parse(localStorage.getItem(ENV_KEY) || '[]'); } catch(e) { return []; }
+}
+
+function saveServices(svcs) {
+  localStorage.setItem(ENV_KEY, JSON.stringify(svcs));
+}
+
+function renderCustomServices() {
+  const svcs = getServices();
+  const container = document.getElementById('customServices');
+  if (!container) return;
+  if (svcs.length === 0) {
+    container.style.display = 'none';
+    return;
+  }
+  container.style.display = 'block';
+  const grid = document.getElementById('customGrid');
+  grid.innerHTML = svcs.map((s, i) => `
+    <a class="card custom-card" href="${s.url}" target="_blank">
+      <button class="card-del" onclick="deleteService(${i});event.preventDefault()">✕</button>
+      <div class="icon bg-indigo">${s.icon}</div>
+      <div class="info">
+        <div class="name">${s.name}</div>
+        <div class="url">${s.url}</div>
+        ${s.tag ? `<div class="tag">${s.tag}</div>` : ''}
+      </div>
+    </a>
+  `).join('');
+}
+
+function deleteService(i) {
+  const svcs = getServices();
+  svcs.splice(i, 1);
+  saveServices(svcs);
+  renderCustomServices();
+}
+
+function openModal() {
+  document.getElementById('modalOverlay').classList.add('show');
+  document.getElementById('svcName').focus();
+}
+
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('show');
+  document.getElementById('svcName').value = '';
+  document.getElementById('svcUrl').value = '';
+  document.getElementById('svcTag').value = '';
+}
+
+function saveService() {
+  const name = document.getElementById('svcName').value.trim();
+  const url = document.getElementById('svcUrl').value.trim();
+  const tag = document.getElementById('svcTag').value.trim();
+  const icon = document.getElementById('svcIcon').value;
+  if (!name || !url) { alert('请填写服务名称和地址'); return; }
+  const svcs = getServices();
+  svcs.push({name, url, tag, icon});
+  saveServices(svcs);
+  renderCustomServices();
+  closeModal();
+}
+
+// 点击遮罩关闭
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// 初始化渲染
+renderCustomServices();
+</script>
+
+<footer>DevOps 统一导航 · node75 · 2026 · 持续更新中</footer>
+</body>
+</html>

@@ -1,0 +1,50 @@
+variables:
+  HARBOR_REGISTRY: "harbor.devops.local:7581"
+  HARBOR_PROJECT: "devops"
+  APP_NAME: "tomcat3"
+  NODE75_IP: "10.20.50.75"
+  SRC_PATH: "/www/devops/tomcat3"
+
+stages:
+  - build
+  - deploy
+
+build:image:
+  stage: build
+  image: harbor.devops.local:7581/devops/gitlab-runner:alpine-v16.9.2
+  tags:
+    - k8s
+  script:
+    - mkdir -p ~/.ssh
+    - echo "${SSH_PRIVATE_KEY}" > ~/.ssh/id_rsa
+    - chmod 600 ~/.ssh/id_rsa
+    - apk add --no-cache rsync openssh-client
+    - ssh-keyscan -H ${NODE75_IP} >> ~/.ssh/known_hosts
+    - rsync -av --delete ${CI_PROJECT_DIR}/ root@${NODE75_IP}:${SRC_PATH}/
+    - ssh root@${NODE75_IP} "docker run --rm -v ${SRC_PATH}:/app -v /opt/maven-repo:/root/.m2 -w /app ${HARBOR_REGISTRY}/devops/maven:3.9-jdk11 mvn clean package -DskipTests -s settings.xml && docker build -t ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${CI_COMMIT_SHORT_SHA} -t ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:latest ${SRC_PATH}/ && docker push ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:${CI_COMMIT_SHORT_SHA} && docker push ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/${APP_NAME}:latest"
+  only:
+    - main
+
+deploy:update-gitops:
+  stage: deploy
+  image: harbor.devops.local:7581/devops/gitlab-runner:alpine-v16.9.2
+  tags:
+    - k8s
+  environment:
+    name: production
+    url: http://tomcat3.devops.local:32490
+  script:
+    - apk add --no-cache git
+    - git config --global user.email "ci@devops.local"
+    - git config --global user.name "GitLab CI"
+    - git clone http://root:${GITLAB_TOKEN}@10.20.50.75:7591/devops/gitops.git
+    - cd gitops
+    - sed -i "s|${APP_NAME}:.*|${APP_NAME}:${CI_COMMIT_SHORT_SHA}|g" apps/tomcat3/base/rollout.yaml
+    - git add -A
+    - git diff --staged --quiet || git commit -m "release ${APP_NAME} to ${CI_COMMIT_SHORT_SHA}"
+    - git push origin HEAD:main
+  only:
+    - main
+  when: manual
+  needs:
+    - build:image
