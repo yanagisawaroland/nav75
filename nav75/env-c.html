@@ -43,8 +43,6 @@ footer{text-align:center;color:#ccc;font-size:0.7em;margin-top:16px}
 .custom-card{position:relative}
 .card-del{position:absolute;top:6px;right:6px;background:#fee2e2;color:#dc2626;border:none;border-radius:4px;padding:1px 6px;font-size:0.6em;cursor:pointer;opacity:0;transition:opacity 0.2s}
 .custom-card:hover .card-del{opacity:1}
-
-/* 弹窗 */
 .modal-overlay{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.4);z-index:1000;align-items:center;justify-content:center}
 .modal-overlay.show{display:flex}
 .modal{background:#fff;border-radius:14px;padding:24px;width:360px;max-width:90vw;box-shadow:0 20px 60px rgba(0,0,0,0.15)}
@@ -152,13 +150,11 @@ footer{text-align:center;color:#ccc;font-size:0.7em;margin-top:16px}
   </div>
 </div>
 
-<!-- 自定义服务区域 -->
-
 <div class="add-btn-row">
   <button class="add-btn" onclick="openModal()">➕ 添加自定义服务</button>
 </div>
 <div class="section" id="customServices" style="display:none">
-  <div class="custom-section-title">⭐ 自定义服务 <span class="custom-badge">本地存储</span></div>
+  <div class="custom-section-title">⭐ 自定义服务 <span class="custom-badge">服务器持久化</span></div>
   <div class="grid" id="customGrid"></div>
 </div>
 
@@ -192,6 +188,7 @@ footer{text-align:center;color:#ccc;font-size:0.7em;margin-top:16px}
         <option value="🗄️">🗄️ 数据库</option>
         <option value="📋">📋 日志</option>
         <option value="🔔">🔔 告警</option>
+        <option value="💥">💥 混沌工程</option>
       </select>
     </div>
     <div class="modal-btns">
@@ -202,27 +199,42 @@ footer{text-align:center;color:#ccc;font-size:0.7em;margin-top:16px}
 </div>
 
 <script>
-const ENV_KEY = 'nav_custom_c';
+const API = 'http://10.20.50.75:8889/c';
+let services = [];
 
-function getServices() {
-  try { return JSON.parse(localStorage.getItem(ENV_KEY) || '[]'); } catch(e) { return []; }
+async function loadServices() {
+  try {
+    const r = await fetch(API);
+    services = await r.json();
+  } catch(e) {
+    services = [];
+    console.warn('API 不可用，数据无法加载');
+  }
+  renderCustomServices();
 }
 
-function saveServices(svcs) {
-  localStorage.setItem(ENV_KEY, JSON.stringify(svcs));
+async function persistServices() {
+  try {
+    await fetch(API, {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(services)
+    });
+  } catch(e) {
+    console.warn('API 保存失败');
+  }
 }
 
 function renderCustomServices() {
-  const svcs = getServices();
   const container = document.getElementById('customServices');
   if (!container) return;
-  if (svcs.length === 0) {
+  if (services.length === 0) {
     container.style.display = 'none';
     return;
   }
   container.style.display = 'block';
   const grid = document.getElementById('customGrid');
-  grid.innerHTML = svcs.map((s, i) => `
+  grid.innerHTML = services.map((s, i) => `
     <a class="card custom-card" href="${s.url}" target="_blank">
       <button class="card-del" onclick="deleteService(${i});event.preventDefault()">✕</button>
       <div class="icon bg-indigo">${s.icon}</div>
@@ -235,10 +247,9 @@ function renderCustomServices() {
   `).join('');
 }
 
-function deleteService(i) {
-  const svcs = getServices();
-  svcs.splice(i, 1);
-  saveServices(svcs);
+async function deleteService(i) {
+  services.splice(i, 1);
+  await persistServices();
   renderCustomServices();
 }
 
@@ -249,31 +260,26 @@ function openModal() {
 
 function closeModal() {
   document.getElementById('modalOverlay').classList.remove('show');
-  document.getElementById('svcName').value = '';
-  document.getElementById('svcUrl').value = '';
-  document.getElementById('svcTag').value = '';
+  ['svcName','svcUrl','svcTag'].forEach(id => document.getElementById(id).value = '');
 }
 
-function saveService() {
+async function saveService() {
   const name = document.getElementById('svcName').value.trim();
   const url = document.getElementById('svcUrl').value.trim();
   const tag = document.getElementById('svcTag').value.trim();
   const icon = document.getElementById('svcIcon').value;
   if (!name || !url) { alert('请填写服务名称和地址'); return; }
-  const svcs = getServices();
-  svcs.push({name, url, tag, icon});
-  saveServices(svcs);
+  services.push({name, url, tag, icon});
+  await persistServices();
   renderCustomServices();
   closeModal();
 }
 
-// 点击遮罩关闭
 document.getElementById('modalOverlay').addEventListener('click', function(e) {
   if (e.target === this) closeModal();
 });
 
-// 初始化渲染
-renderCustomServices();
+loadServices();
 </script>
 
 <footer>DevOps 统一导航 · node75 · 2026 · 持续更新中</footer>
