@@ -8,7 +8,7 @@ def load_data():
     if os.path.exists(DATA_FILE):
         with open(DATA_FILE) as f:
             return json.load(f)
-    return {"a": [], "b": [], "c": [], "index": []}
+    return {"a": [], "b": [], "c": [], "d": [], "index": []}
 
 def save_data(data):
     with open(DATA_FILE, 'w') as f:

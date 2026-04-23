@@ -4,7 +4,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0">
-<title>C环境 devops61</title>
+<title>DevOps 统一导航</title>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{background:#f0f2f5;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Arial,sans-serif;padding:20px 16px;color:#1a1a2e}
@@ -63,90 +63,67 @@ footer{text-align:center;color:#ccc;font-size:0.7em;margin-top:16px}
 <body>
 <div class="header">
   <h1>🚀 DevOps 统一导航</h1>
-  <p>master61(10.20.50.61)</p>
+  <p>node75 · A/B/C 环境统一入口</p>
 </div>
 <div class="nav-tabs">
-  <a href="index.html">🌐 主页</a>
+  <a href="index.html" class="active">🌐 主页</a>
   <a href="env-a.html">🅰️ A环境</a>
   <a href="env-b.html">🅱️ B环境</a>
-  <a href="env-c.html">C C环境</a>
-  <a href="env-d.html" class="active">D D环境</a>
+  <a href="env-c.html">©️ C环境</a>
 </div>
 <div class="section">
-  <div class="section-title">☸️ 基础平台</div>
+  <div class="section-title">🌐 公共服务（node75 · 10.20.50.75）</div>
   <div class="grid">
-    <a class="card" href="https://argocd.devops61.lan" target="_blank">
-      <div class="icon bg-purple">🐙</div>
-      <div class="info"><div class="name">ArgoCD</div><div class="url">https://argocd.devops61.lan</div><div class="url2">https://10.20.50.61:30143</div><div class="tag">admin</div></div>
+    <a class="card" href="https://harbor.devops.local:7581" target="_blank">
+      <div class="icon bg-blue">🐳</div>
+      <div class="info"><div class="name">Harbor</div><div class="url">https://harbor.devops.local:7581</div><div class="tag">admin / Harbor12345</div></div>
+    </a>
+    <a class="card" href="http://gitlab.devops.local:7591" target="_blank">
+      <div class="icon bg-orange">🦊</div>
+      <div class="info"><div class="name">GitLab</div><div class="url">http://gitlab.devops.local:7591</div><div class="tag">root / huzhaofeng1234</div></div>
+    </a>
+    <a class="card" href="https://gitee.com/yanagisawa" target="_blank">
+      <div class="icon bg-red">🍊</div>
+      <div class="info"><div class="name">Gitee · yanagisawa</div><div class="url">https://gitee.com/yanagisawa</div><div class="tag">A环境仓库</div></div>
+    </a>
+    <a class="card" href="https://gitee.com/devops51" target="_blank">
+      <div class="icon bg-red">🍊</div>
+      <div class="info"><div class="name">Gitee · devops51</div><div class="url">https://gitee.com/devops51</div><div class="tag">B环境仓库</div></div>
+    </a>
+    <a class="card" href="http://10.20.50.75:8888" target="_blank">
+      <div class="icon bg-gray">🗺️</div>
+      <div class="info"><div class="name">统一导航页</div><div class="url">http://10.20.50.75:8888</div><div class="tag">本页面</div></div>
     </a>
   </div>
 </div>
 <div class="section">
-  <div class="section-title">📊 监控告警</div>
+  <div class="section-title">🅰️ A环境 devops（点击进入详细页面）</div>
   <div class="grid">
-    <a class="card" href="#" onclick="return false">
-      <div class="icon bg-orange">📊</div>
-      <div class="info"><div class="name">Grafana</div><div class="url">grafana.devops61.lan</div><div class="pending-badge">⏳ 待部署/配置域名</div></div>
+    <a class="card" href="env-a.html" target="_blank">
+      <div class="icon bg-indigo">🅰️</div>
+      <div class="info"><div class="name">A环境服务列表</div><div class="url">env-a.html</div><div class="tag">K8s v1.27.1 · Istio v1.20.0 · master71(10.20.50.71-74)</div></div>
     </a>
-    <a class="card" href="#" onclick="return false">
-      <div class="icon bg-red">🔥</div>
-      <div class="info"><div class="name">Prometheus</div><div class="url">prometheus.devops61.lan</div><div class="pending-badge">⏳ 待部署/配置域名</div></div>
-    </a>
-    <a class="card" href="#" onclick="return false">
-      <div class="icon bg-yellow">🔔</div>
-      <div class="info"><div class="name">AlertManager</div><div class="url">alertmanager.devops61.lan</div><div class="pending-badge">⏳ 待部署/配置域名</div></div>
+    <a class="card" href="http://10.20.50.71:8888" target="_blank">
+      <div class="icon bg-gray">🗺️</div>
+      <div class="info"><div class="name">A环境导航页</div><div class="url">http://10.20.50.71:8888</div><div class="tag">原有导航页</div></div>
     </a>
   </div>
 </div>
 <div class="section">
-  <div class="section-title">📋 日志</div>
+  <div class="section-title">🅱️ B环境 devops51（点击进入详细页面）</div>
   <div class="grid">
-    <a class="card" href="#" onclick="return false">
-      <div class="icon bg-green">🔍</div>
-      <div class="info"><div class="name">Kibana</div><div class="url">kibana.devops61.lan</div><div class="pending-badge">⏳ 待部署/配置域名</div></div>
-    </a>
-    <a class="card" href="#" onclick="return false">
-      <div class="icon bg-cyan">🔎</div>
-      <div class="info"><div class="name">Elasticsearch</div><div class="url">elasticsearch.devops61.lan</div><div class="pending-badge">⏳ 待部署/配置域名</div></div>
-    </a>
-    <a class="card" href="#" onclick="return false">
-      <div class="icon bg-indigo">🔭</div>
-      <div class="info"><div class="name">Jaeger</div><div class="url">jaeger.devops61.lan</div><div class="pending-badge">⏳ 待部署/配置域名</div></div>
+    <a class="card" href="env-b.html" target="_blank">
+      <div class="icon bg-teal">🅱️</div>
+      <div class="info"><div class="name">B环境服务列表</div><div class="url">env-b.html</div><div class="tag">k3s v1.34.6 · Istio v1.24.3 · master51(10.20.50.51-52)</div></div>
     </a>
   </div>
 </div>
 <div class="section">
-  <div class="section-title">🕸️ 服务网格</div>
+  <div class="section-title">©️ C环境 devops61（点击进入详细页面）</div>
   <div class="grid">
-    <a class="card" href="#" onclick="return false">
-      <div class="icon bg-blue">🕸️</div>
-      <div class="info"><div class="name">Kiali</div><div class="url">kiali.devops61.lan</div><div class="pending-badge">⏳ 待部署/配置域名</div></div>
-    </a>
-    <a class="card" href="#" onclick="return false">
-      <div class="icon bg-teal">🌐</div>
-      <div class="info"><div class="name">Istio Ingress HTTP</div><div class="url">http://10.20.50.60</div><div class="pending-badge">⏳ 待部署/配置域名</div></div>
-    </a>
-  </div>
-</div>
-<div class="section">
-  <div class="section-title">☕ 应用</div>
-  <div class="grid">
-    <a class="card" href="#" onclick="return false">
-      <div class="icon bg-green">☕</div>
-      <div class="info"><div class="name">tomcat5 staging</div><div class="url">tomcat5-staging.devops61.lan</div><div class="pending-badge">⏳ 待部署/配置域名</div></div>
-    </a>
-    <a class="card" href="#" onclick="return false">
-      <div class="icon bg-blue">☕</div>
-      <div class="info"><div class="name">tomcat5 production</div><div class="url">tomcat5-production.devops61.lan</div><div class="pending-badge">⏳ 待部署/配置域名</div></div>
-    </a>
-  </div>
-</div>
-<div class="section">
-  <div class="section-title">🖥️ 节点信息</div>
-  <div class="grid">
-    <a class="card" href="http://10.20.50.61" target="_blank">
-      <div class="icon bg-gray">🖥️</div>
-      <div class="info"><div class="name">master61</div><div class="url">http://10.20.50.61</div><div class="tag">root / remanco · 主节点</div></div>
+    <a class="card" href="env-c.html" target="_blank">
+      <div class="icon bg-purple">©️</div>
+      <div class="info"><div class="name">C环境服务列表</div><div class="url">env-c.html</div><div class="tag">master61(10.20.50.61)</div></div>
     </a>
   </div>
 </div>
@@ -200,7 +177,7 @@ footer{text-align:center;color:#ccc;font-size:0.7em;margin-top:16px}
 </div>
 
 <script>
-const API = 'http://10.20.50.75:8889/c';
+const API = 'http://10.20.50.75:8889/index';
 let services = [];
 
 async function loadServices() {
@@ -283,6 +260,32 @@ document.getElementById('modalOverlay').addEventListener('click', function(e) {
 loadServices();
 </script>
 
+<div class="section">
+  <div class="section-title">🅳 D环境 devops41（Kind · master41）</div>
+  <div class="grid">
+    <a class="card" href="env-d.html" target="_blank">
+      <div class="icon bg-blue">🅳</div>
+      <div class="info"><div class="name">D环境服务列表</div><div class="url">env-d.html</div><div class="tag">master41(10.20.50.41) · Kind K8s</div></div>
+    </a>
+  </div>
+</div>
+<div class="section">
+  <div class="section-title">🎬 学习动图</div>
+  <div class="grid">
+    <a class="card" href="http://10.20.50.75:8888/arch-evolution.html" target="_blank">
+      <div class="icon bg-orange">🏗️</div>
+      <div class="info"><div class="name">架构演进动图</div><div class="url">单体→微服务→服务网格</div></div>
+    </a>
+    <a class="card" href="http://10.20.50.75:8888/canary-flow.html" target="_blank">
+      <div class="icon bg-blue">🚀</div>
+      <div class="info"><div class="name">金丝雀发布动图</div><div class="url">Argo Rollouts + Istio</div></div>
+    </a>
+    <a class="card" href="http://10.20.50.75:8888/fault-propagation.html" target="_blank">
+      <div class="icon bg-red">⚡</div>
+      <div class="info"><div class="name">故障传播与熔断</div><div class="url">雪崩效应演示</div></div>
+    </a>
+  </div>
+</div>
 <footer>DevOps 统一导航 · node75 · 2026 · 持续更新中</footer>
 </body>
 </html>
