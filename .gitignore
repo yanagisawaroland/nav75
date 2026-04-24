@@ -4,3 +4,10 @@
 target/
 node_modules/
 nav75-bak-*/
+
+# wrangler files
+.wrangler
+.dev.vars*
+!.dev.vars.example
+.env*
+!.env.example
