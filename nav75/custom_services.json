@@ -1,1 +1,1 @@
-{"a": [], "b": [], "c": [], "d": [], "index": []}
+{"a": [], "b": [], "c": [], "d": [{"name": "argocd", "url": "http://10.20.50.41:8080/", "tag": "kubectl port-forward svc/argocd-server -n argocd 8080:80", "icon": "🔗"}, {"name": "kubectl port-forward svc/argocd-server -n argocd 8080:80 --address 0.0.0.0 &", "url": "开启argocd临时访问端口", "tag": "", "icon": "🔗"}, {"name": "nginx", "url": "http://10.20.50.41:8081/", "tag": "kubectl port-forward svc/nginx -n default 8081:80 --address 0.0.0.0", "icon": "🔗"}], "index": []}
